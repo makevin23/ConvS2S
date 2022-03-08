@@ -111,6 +111,7 @@ train_y = np.asarray([np.pad(example, [0, max_target_length - len(example) + 2],
 
 # Train the Embedder Network on the examples
 embedder = embedding.Embed(word_to_index, 512, 16)
+tf.compat.v1.disable_eager_execution()
 embedder.train_embedder(train_x)
 # train_embeddings = embedder.generate_embeddings(train_x)
 # label_embeddings = embedder.generate_embeddings(train_y)

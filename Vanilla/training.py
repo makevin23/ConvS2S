@@ -17,7 +17,7 @@ class Translator():
         self.batch_size = batch_size
         self.epochs = epochs
         self.lr = learning_rate
-        self.target_pl = tf.placeholder(dtype = tf.float32, shape = [None, self.decoder.max_length - 1, self.vocab_size])
+        self.target_pl = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.decoder.max_length - 1, self.vocab_size])
 
 # The __call__() enables use to build a callable object.
    
@@ -58,7 +58,7 @@ class Translator():
         label_embeddings = self.embedder.generate_embeddings(targets)
 
         # Start the Tensorflow Session
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
 
             # Define the network, the optimizer and the loss function
             loss = []
@@ -69,10 +69,10 @@ class Translator():
             min_op = optimizer.minimize(loss_fxn)
 
             # Writer for the tensorflow graph. It also shows the loss function
-            writer = tf.summary.FileWriter(os.getcwd() + '/TensorBoard_' + str(np.random.randint(0, 10000)))
-            sess.run(tf.global_variables_initializer())
+            writer = tf.compat.v1.summary.FileWriter(os.getcwd() + '/TensorBoard_' + str(np.random.randint(0, 10000)))
+            sess.run(tf.compat.v1.global_variables_initializer())
             tf.summary.scalar('loss', tf.reduce_mean(loss_fxn))
-            merger = tf.summary.merge_all()
+            merger = tf.compat.v1.summary.merge_all()
             writer.add_graph(sess.graph)
 
             # Start training for the number of epochs given
@@ -104,7 +104,7 @@ class Translator():
 
 # Run the network for the given inputs
     def start_eval(self, inputs):
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
 
             # Build the network
             encoder_output, encoder_attention = self.encoder.encoder()
@@ -115,7 +115,7 @@ class Translator():
             i = 1
 
             # Start the session. While the output_length is less than the max_length for the decoder, run the netwrok
-            sess.run(tf.global_variables_initializer())
+            sess.run(tf.compat.v1.global_variables_initializer())
             while(next_decoder_output is None or next_decoder_output[0, 0] is not 1) and len(decoder_inputs[0, :]) < self.decoder.max_length and i < self.decoder.max_length - 1:
                 output = sess.run(prob_output, feed_dict = {
                     self.encoder.X : self.embedder.generate_embeddings(inputs), 

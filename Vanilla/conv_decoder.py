@@ -46,19 +46,19 @@ class ConvDecoder():
         self.kernel_size = [5, self.hidden_size]
 
         # Define the various placeholders and layers
-        with tf.variable_scope("ConvS2S", reuse = tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
             self.dense_layer_1 = tf.Variable(tf.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Dec")
             self.dense_layer_2 = tf.Variable(tf.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Dec")
             self.dense_layer_3 = tf.Variable(tf.truncated_normal([self.embedding_size, self.vocab_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_3_Dec")
             self.layer_conv_embedding = tf.Variable(tf.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Hid_to_Embed_att_dec")
             self.layer_embedding_conv = tf.Variable(tf.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
-            self.input_x = tf.placeholder(dtype = tf.float32, shape = [None, self.max_length - 1, self.embedding_size], name = "Decoding_Input")
+            self.input_x = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length - 1, self.embedding_size], name = "Decoding_Input")
         
     def decoder(self, encoder_outputs, encoder_attention):
-        with tf.variable_scope("ConvS2S", reuse = tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
 
             # Step 1:
-            self.input_x = tf.nn.dropout(self.input_x, keep_prob = self.p)
+            self.input_x = tf.compat.v1.nn.dropout(self.input_x, keep_prob = self.p)
             temp = tf.reshape(self.input_x, [tf.shape(self.input_x)[0]*self.input_x.shape[1], self.input_x.shape[2]])
 
             # Step 2:
@@ -69,9 +69,9 @@ class ConvDecoder():
 
                 # Step 3
                 residual_output = layer_output
-                dl1_out = tf.nn.dropout(dl1_out_, keep_prob = self.p)
+                dl1_out = tf.compat.v1.nn.dropout(dl1_out_, keep_prob = self.p)
                 dl1_out = tf.expand_dims(dl1_out_, axis = 0)
-                self.conv_layer = tf.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_layer_Dec")
+                self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_layer_Dec")
                 glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
                 glu = tf.squeeze(glu_output, axis = 0)
                 layer_output = (glu + residual_output) * np.sqrt(0.5)
@@ -100,8 +100,8 @@ class ConvDecoder():
             self.prob_output = tf.matmul(output, self.dense_layer_3, name = "Layer_3_Dec_MatMul")
             self.prob_output = tf.reshape(self.prob_output, [tf.shape(self.prob_output)[0]/(self.max_length - 1), self.max_length - 1, self.vocab_size])
             self.prob_output = tf.nn.softmax(self.prob_output, 2)
-            writer = tf.summary.FileWriter("D:/College/Masters/Summer/ConvS2S/Tensorboards/" + str(np.random.randint(0, 10000)))
-            with tf.Session() as sess:
-                sess.run(tf.global_variables_initializer())
+            writer = tf.compat.v1.summary.FileWriter("D:/College/Masters/Summer/ConvS2S/Tensorboards/" + str(np.random.randint(0, 10000)))
+            with tf.compat.v1.Session() as sess:
+                sess.run(tf.compat.v1.global_variables_initializer())
                 writer.add_graph(sess.graph)
         return (self.prob_output)

@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import tensorflow.python.ops.numpy_ops.np_config as np_config
 
 # The Embed class is used to generate the word embeddings. 
 # The class using tri-grams for context. Each tri-gram can be 
@@ -39,6 +40,7 @@ class Embed():
 
     # This function generates pairs for training
     def generate_input_pairs(self, X):
+        np_config.enable_numpy_behavior()
         X_ = []
         Y_ = []
         for sentence in X:
@@ -68,12 +70,12 @@ class Embed():
         self.generate_input_pairs(X)
 
         # Initialize all the variables and placeholders
-        self.embedding_words = tf.Variable(tf.random_uniform([self.vocab_size, self.embedding_size], -1, 1), name = "Embedder")
-        nce_weights = tf.Variable(tf.truncated_normal([self.vocab_size, self.embedding_size], stddev = 1/np.sqrt(self.embedding_size)), name = "Embedding_Layer")
+        self.embedding_words = tf.Variable(tf.random.uniform([self.vocab_size, self.embedding_size], -1, 1), name = "Embedder")
+        nce_weights = tf.Variable(tf.compat.v1.random.truncated_normal([self.vocab_size, self.embedding_size], stddev = 1/np.sqrt(self.embedding_size)), name = "Embedding_Layer")
         nce_biases = tf.Variable(tf.zeros([self.vocab_size]), name = "Embedding_Biases")
         n_batches = len(self.X) // self.batch_size
-        train_inputs = tf.placeholder(tf.int32, shape = [self.batch_size], name = "Dictionary_Input")
-        train_labels = tf.placeholder(tf.int32, shape = [self.batch_size, 1], name = "Embedded_Output")
+        train_inputs = tf.compat.v1.placeholder(tf.int32, shape = [self.batch_size], name = "Dictionary_Input")
+        train_labels = tf.compat.v1.placeholder(tf.int32, shape = [self.batch_size, 1], name = "Embedded_Output")
 
         # The function embedding_lookup gives us the embedding based on the input pair
         embed = tf.nn.embedding_lookup(self.embedding_words, train_inputs)
@@ -91,12 +93,12 @@ class Embed():
         )
 
         # Optimize the loss
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate = 0.1).minimize(loss)
-        with tf.Session() as sess:
+        optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate = 0.1).minimize(loss)
+        with tf.compat.v1.Session() as sess:
 
             # Start the session and use mini-batch stochastic 
             # gradient descent to train the model
-            sess.run(tf.global_variables_initializer())
+            sess.run(tf.compat.v1.global_variables_initializer())
             for _i in range(100):
                 index_ = np.arange(0, self.X.shape[0])
                 np.random.shuffle(index_)
@@ -111,10 +113,10 @@ class Embed():
     # generate the embeddings of the input sentences
     def get_embedding(self, X):
         embedded_words = []
-        word_tf = tf.placeholder(dtype = tf.int32, shape = None)
+        word_tf = tf.compat.v1.placeholder(dtype = tf.int32, shape = None)
         look_up = tf.nn.embedding_lookup(self.embedding_words, word_tf, name = "Look_Up_Function")
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
+        with tf.compat.v1.Session() as sess:
+            sess.run(tf.compat.v1.global_variables_initializer())
             for sentence in X:
                 vecc = []
                 for word in sentence:
@@ -126,10 +128,10 @@ class Embed():
     def get_position_embedding(self, X):
         position = []
         self.embed_position(X)
-        position_tf = tf.placeholder(dtype = tf.int32, shape = None)
+        position_tf = tf.compat.v1.placeholder(dtype = tf.int32, shape = None)
         look_up = tf.nn.embedding_lookup(self.embedding_words, position_tf, name = "Look_Up_Function_pos")
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
+        with tf.compat.v1.Session() as sess:
+            sess.run(tf.compat.v1.global_variables_initializer())
             for vec in self.position_vectors:
                 temp = []
                 for value in vec:
@@ -144,7 +146,7 @@ class Embed():
     
     # Given a embedding vector return the word
     def generate_vocab(self, embedding_vec):
-        input_vec = tf.placeholder(dtype = tf.float32, shape = [None, self.embedding_size], name = "Inverse_Input")
+        input_vec = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.embedding_size], name = "Inverse_Input")
 
         # The word is just the argmax of the multiplication 
         # of the embedding matrix and the input embedding pair
@@ -154,8 +156,8 @@ class Embed():
             transpose_b = True
         )
         index_ = tf.argmax(vocab, axis = 1)
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
+        with tf.compat.v1.Session() as sess:
+            sess.run(tf.compat.v1.global_variables_initializer())
             index = sess.run(index_, feed_dict = { input_vec : embedding_vec })
         return index
 
