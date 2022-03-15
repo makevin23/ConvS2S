@@ -4,7 +4,7 @@
 # Paper : https://arxiv.org/pdf/1705.03122.pdf
 #####################################################################
 
-import os as os
+import os
 import tensorflow as tf
 import numpy as np
 import string
