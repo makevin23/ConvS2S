@@ -70,7 +70,7 @@ class Embed():
         self.generate_input_pairs(X)
 
         # Initialize all the variables and placeholders
-        self.embedding_words = tf.Variable(tf.random.uniform([self.vocab_size, self.embedding_size], -1, 1), name = "Embedder")
+        self.embedding_words = tf.random.uniform([self.vocab_size, self.embedding_size], -1, 1)
         nce_weights = tf.Variable(tf.compat.v1.random.truncated_normal([self.vocab_size, self.embedding_size], stddev = 1/np.sqrt(self.embedding_size)), name = "Embedding_Layer")
         nce_biases = tf.Variable(tf.zeros([self.vocab_size]), name = "Embedding_Biases")
         n_batches = len(self.X) // self.batch_size
@@ -109,20 +109,34 @@ class Embed():
                     feed_dict = {train_inputs : self.X[batch], train_labels : self.Y[batch]}
                     _, cur_loss = sess.run([optimizer, loss], feed_dict = feed_dict)
 
+
+    @tf.function
+    def lookup_in_embedding(self, word_ids):
+        return tf.nn.embedding_lookup(self.embedding_words, word_ids, name="Look_Up_Function")
+
     # Use the trained embedding function to 
     # generate the embeddings of the input sentences
     def get_embedding(self, X):
         embedded_words = []
-        word_tf = tf.compat.v1.placeholder(dtype = tf.int32, shape = None)
-        look_up = tf.nn.embedding_lookup(self.embedding_words, word_tf, name = "Look_Up_Function")
-        with tf.compat.v1.Session() as sess:
-            sess.run(tf.compat.v1.global_variables_initializer())
-            for sentence in X:
-                vecc = []
-                for word in sentence:
-                    vecc.append(sess.run(look_up, feed_dict = { word_tf : word}))
-                embedded_words.append(np.asarray(vecc))
+        # word_tf = tf.compat.v1.placeholder(dtype = tf.int32, shape = None)
+        # look_up = tf.nn.embedding_lookup(self.embedding_words, word_tf, name = "Look_Up_Function")
+        # with tf.compat.v1.Session() as sess:
+        #     sess.run(tf.compat.v1.global_variables_initializer())
+        #     for sentence in X:
+        #         vecc = []
+        #         for word in sentence:
+        #             vecc.append(sess.run(look_up, feed_dict = { word_tf : word}))
+        #         embedded_words.append(np.asarray(vecc))
+
+        for sentence in X:
+            look_up = self.lookup_in_embedding(sentence)
+            # look_up = tf.nn.embedding_lookup(self.embedding_words, sentence).numpy()
+            vecc = [look_up]
+            embedded_words.append(np.asarray(vecc))
+
         return(np.asarray(embedded_words))
+
+    
     
     # Generate the position embeddings of the input sentences
     def get_position_embedding(self, X):
