@@ -1,2 +1,5 @@
 BiConvS2S/__pycache__/*
+<<<<<<< HEAD
 BiConvS2S_tf2/__pycache__/*
+=======
+>>>>>>> use numpy array instead of tf variable

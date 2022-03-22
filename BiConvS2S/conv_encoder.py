@@ -46,7 +46,11 @@ class ConvEncoder():
             # self.layer_embedding_conv = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
             
 
+<<<<<<< HEAD
     def for_encoder(self, input_length = 1024):
+=======
+    def for_encoder(self, input_length = None):
+>>>>>>> use numpy array instead of tf variable
         with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
             if input_length == None:
                 self.X = tf.compat.v1.placeholder(dtype = tf.float32, shape = [input_length, self.max_length, self.embedding_size], name = "Encoder_Input")
