@@ -159,7 +159,7 @@ trainer = training.Translator(Encoder, Decoder, embedder_import, word_to_index_i
 trainer(inputs = train_x, targets = train_y, is_training = True)
 
 # Check the output
-print(trainer(inputs = train_x))
+print(trainer(inputs = np.asarray([train_x[0]])))
 
 
 
