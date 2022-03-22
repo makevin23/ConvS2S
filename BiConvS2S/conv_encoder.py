@@ -32,16 +32,24 @@ class ConvEncoder():
         self.kernel_size = [3, self.hidden_size]
         self.vocab_size = vocab_size
         with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
-            self.dense_layer_1 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Encoder")
-            self.dense_layer_2 = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Encoder")
-            self.dense_layer_3 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.vocab_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_3_Encoder")
-            self.layer_conv_embedding = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Hid_to_Embed_att_dec")
-            self.layer_embedding_conv = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
+            self.dense_layer_1 = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.embedding_size, self.hidden_size))
+            self.dense_layer_2 = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.hidden_size, self.embedding_size))
+            self.dense_layer_3 = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.embedding_size, self.vocab_size))
+            self.layer_conv_embedding = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.hidden_size, self.embedding_size))
+            self.layer_embedding_conv = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.embedding_size, self.hidden_size))
+            # self.dense_layer_1 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Encoder")
+            # self.dense_layer_2 = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Encoder")
+            # self.dense_layer_3 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.vocab_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_3_Encoder")
+            # self.layer_conv_embedding = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Hid_to_Embed_att_dec")
+            # self.layer_embedding_conv = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
             
 
-    def for_encoder(self):
+    def for_encoder(self, input_length = None):
         with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
-            self.X = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length, self.embedding_size], name = "Encoder_Input")
+            if input_length == None:
+                self.X = tf.compat.v1.placeholder(dtype = tf.float32, shape = [input_length, self.max_length, self.embedding_size], name = "Encoder_Input")
+            else:
+                self.X = np.ndarray((input_length, self.max_length, self.embedding_size), dtype = np.float32)
             # Step 2:
             self.X = tf.compat.v1.nn.dropout(self.X, keep_prob = self.dropout)
             temp = tf.reshape(self.X, [tf.shape(self.X)[0]*self.X.shape[1], self.X.shape[2]])

@@ -5,7 +5,7 @@ import os
 # The Translator class trains the network translating between languages
 
 class Translator():
-    def __init__(self, encoder, decoder, embedder, vocab, inverse_vocab, learning_rate = 0.0001, batch_size = 1, epochs = 100):
+    def __init__(self, encoder, decoder, embedder, vocab, inverse_vocab, learning_rate = 0.0001, batch_size = 1, epochs = 2):
         self.encoder = encoder
         self.decoder = decoder
         self.embedder = embedder
@@ -118,9 +118,9 @@ class Translator():
 # Run the network for the given inputs
     def start_eval(self, inputs):
         with tf.compat.v1.Session() as sess:
-
+            
             # Build the network
-            encoder_output, encoder_attention = self.encoder.for_encoder()
+            encoder_output, encoder_attention = self.encoder.for_encoder(len(inputs))
             prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
             decoder_inputs = np.zeros((inputs.shape[0], self.decoder.max_length - 1))
             decoder_inputs[:, 0] = np.ones((inputs.shape[0]))
@@ -129,7 +129,7 @@ class Translator():
 
             # Start the session. While the output_length is less than the max_length for the decoder, run the netwrok
             sess.run(tf.compat.v1.global_variables_initializer())
-            while(next_decoder_output is None or next_decoder_output[0, 0] is not 1) and len(decoder_inputs[0, :]) < self.decoder.max_length and i < self.decoder.max_length - 1:
+            while(next_decoder_output is None or next_decoder_output[0, 0] != 1) and len(decoder_inputs[0, :]) < self.decoder.max_length and i < self.decoder.max_length - 1:
                 output = sess.run(prob_output, feed_dict = {
                     self.encoder.X : self.embedder.generate_embeddings(inputs), 
                     self.decoder.input_x : self.embedder.generate_embeddings(decoder_inputs)
