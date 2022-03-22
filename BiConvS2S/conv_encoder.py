@@ -47,10 +47,14 @@ class ConvEncoder():
             
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def for_encoder(self, input_length = 1024):
 =======
     def for_encoder(self, input_length = None):
 >>>>>>> use numpy array instead of tf variable
+=======
+    def for_encoder(self, input_length = 1024):
+>>>>>>> rewrite part of encoder in numpy
         with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
             if input_length == None:
                 self.X = tf.compat.v1.placeholder(dtype = tf.float32, shape = [input_length, self.max_length, self.embedding_size], name = "Encoder_Input")
