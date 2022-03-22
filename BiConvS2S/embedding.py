@@ -180,6 +180,12 @@ class Embed():
                 one_hot[i, j, X[i, j]] = 1
         return one_hot
 
+    def export_embedder(self, file_path):
+        with open(file_path+"/embedding_words.npy", "wb") as f:
+            np.save(f, self.embedding_words)
 
+    def load_embedding_words(self, embedding_words_file):
+        with open(embedding_words_file+"/embedding_words.npy", "rb") as f:
+            self.embedding_words = np.load(f)
 
 
