@@ -83,28 +83,32 @@ class Embed():
         print(self.embedding_words)
                 
 
+    @tf.function
+    def look_up_word(self, word_tf):
+        return tf.nn.embedding_lookup(self.embedding_words, word_tf, name = "Look_Up_Function")
                 
 
     def get_embedding(self, X):
         embedded_words = []
-        word_tf = tf.keras.Input(dtype=tf.int32, shape=None)
-        look_up = tf.nn.embedding_lookup(
-            self.embedding_words, word_tf, name="Look_Up_Function")
-
-        # Session
-
+        for sentence in X:
+                vecc = []
+                for word in sentence:
+                    vecc.append(self.look_up_word(word))
+                embedded_words.append(np.asarray(vecc))
         return(np.asarray(embedded_words))
+
+    @tf.function
+    def look_up_position(self, position_tf):
+        return tf.nn.embedding_lookup(self.embedding_words, position_tf, name = "Look_Up_Function_pos")
 
     def get_position_embedding(self, X):
         position = []
         self.embed_position(X)
-        position_tf = tf.keras.Input(dtype=tf.int32, shape=None)
-        look_up = tf.nn.embedding_lookup(
-            self.embedding_words, position_tf, name="Look_Up_Function")
-
-        # Session
-
-
+        for vec in self.position_vectors:
+                temp = []
+                for value in vec:
+                    temp.append(self.get_embedding(value))
+                position.append(np.asarray(temp))
         return np.asarray(position)
 
     def generate_embeddings(self, X):
