@@ -111,24 +111,24 @@ class Embed():
                 position.append(np.asarray(temp))
         return np.asarray(position)
 
+    # TODO: write unit test for generate_embeddings
     def generate_embeddings(self, X):
         return (self.get_embedding(X) + self.get_position_embedding(X))
 
-    def generate_vocab(self, embedding_vec):
-        input_vec = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.embedding_size], name = "Inverse_Input")
 
-        # The word is just the argmax of the multiplication 
-        # of the embedding matrix and the input embedding pair
+    @tf.function
+    def index_vocab(self, input_vec):
         vocab = tf.matmul(
             tf.nn.l2_normalize(self.embedding_words, axis = 1),
             tf.nn.l2_normalize(input_vec, axis = 1),
             transpose_b = True
         )
         index_ = tf.argmax(vocab, axis = 1)
-        with tf.compat.v1.Session() as sess:
-            sess.run(tf.compat.v1.global_variables_initializer())
-            index = sess.run(index_, feed_dict = { input_vec : embedding_vec })
-        return index
+        pass
+
+    # TODO: write unit test for generate_vocab
+    def generate_vocab(self, embedding_vec):
+        return self.index_vocab(embedding_vec)
 
     def one_hot_encoding(self, X):
         one_hot = np.zeros((X.shape[0], X.shape[1], self.vocab_size))
