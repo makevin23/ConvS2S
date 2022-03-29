@@ -111,7 +111,7 @@ class Embed():
                 position.append(np.asarray(temp))
         return np.asarray(position)
 
-    # TODO: write unit test for generate_embeddings
+
     def generate_embeddings(self, X):
         return (self.get_embedding(X) + self.get_position_embedding(X))
 
