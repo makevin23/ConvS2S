@@ -1,6 +1,8 @@
 import tensorflow as tf
 import numpy as np
 import os
+from sigmoid import sigmoid
+
 
 # How does the encoder work?
 # 1. The encoder takes its input as a sentence in the training set.
@@ -32,38 +34,56 @@ class ConvEncoder():
         self.kernel_size = [3, self.hidden_size]
         self.vocab_size = vocab_size
         with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
-            self.dense_layer_1 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Encoder")
-            self.dense_layer_2 = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Encoder")
-            self.dense_layer_3 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.vocab_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_3_Encoder")
-            self.layer_conv_embedding = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Hid_to_Embed_att_dec")
-            self.layer_embedding_conv = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
+            self.dense_layer_1 = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.embedding_size, self.hidden_size))
+            self.dense_layer_2 = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.hidden_size, self.embedding_size))
+            self.dense_layer_3 = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.embedding_size, self.vocab_size))
+            self.layer_conv_embedding = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.hidden_size, self.embedding_size))
+            self.layer_embedding_conv = np.random.normal(0, 1/np.sqrt(self.embedding_size), (self.embedding_size, self.hidden_size))
+            # self.dense_layer_1 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Encoder")
+            # self.dense_layer_2 = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Encoder")
+            # self.dense_layer_3 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.vocab_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_3_Encoder")
+            # self.layer_conv_embedding = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Hid_to_Embed_att_dec")
+            # self.layer_embedding_conv = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
             
 
-    def for_encoder(self):
+    def for_encoder(self, input_length = 1024):
         with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
-            self.X = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length, self.embedding_size], name = "Encoder_Input")
+            if input_length == None:
+                self.X = tf.compat.v1.placeholder(dtype = tf.float32, shape = [input_length, self.max_length, self.embedding_size], name = "Encoder_Input")
+            else:
+                self.X = np.ndarray((input_length, self.max_length, self.embedding_size), dtype = np.float32)
             # Step 2:
-            self.X = tf.compat.v1.nn.dropout(self.X, keep_prob = self.dropout)
-            temp = tf.reshape(self.X, [tf.shape(self.X)[0]*self.X.shape[1], self.X.shape[2]])
-            dl1_out_ = tf.matmul(temp, self.dense_layer_1, name = "Layer_1_MatMul_enc")
-            dl1_out_ = tf.reshape(dl1_out_, [tf.shape(dl1_out_)[0]/self.max_length, self.max_length, self.hidden_size])
+            # self.X = tf.compat.v1.nn.dropout(self.X, rate = 1-self.dropout)
+            # temp = tf.reshape(self.X, [tf.shape(self.X)[0]*self.X.shape[1], self.X.shape[2]])
+            temp = np.reshape(self.X, (self.X.shape[0]*self.X.shape[1], self.X.shape[2]))
+            # dl1_out_ = tf.matmul(temp, self.dense_layer_1, name = "Layer_1_MatMul_enc")
+            dl1_out_ = np.matmul(temp, self.dense_layer_1)
+            # dl1_out_ = tf.reshape(dl1_out_, [tf.shape(dl1_out_)[0]/self.max_length, self.max_length, self.hidden_size])
+            dl1_out_ = np.reshape(dl1_out_, [dl1_out_.shape[0]//self.max_length, self.max_length, self.hidden_size])
             layer_output = dl1_out_
             for _ in range(self.num_layers):
 
                 # Step 3:
                 residual_output = layer_output
                 self.checker = layer_output
-                dl1_out = tf.compat.v1.nn.dropout(layer_output, keep_prob = self.dropout)
-                dl1_out = tf.expand_dims(dl1_out, axis = 0)
-                self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_Layer_Encoder")
-                glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
-                glu = tf.squeeze(glu_output, axis = 0)
+                # dl1_out = tf.compat.v1.nn.dropout(layer_output, rate = 1-self.dropout)
+                dl1_out = layer_output
+                # dl1_out = tf.expand_dims(dl1_out, axis = 0)
+                dl1_out = np.expand_dims(dl1_out, axis = 0)
+                # self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_Layer_Encoder")
+
+                self.conv_layer = tf.keras.layers.Conv2D(2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_Layer_Encoder")(dl1_out)
+
+                glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
+                # glu = tf.squeeze(glu_output, axis = 0)
+                glu = np.squeeze(glu_output, axis = 0)
                 layer_output = (glu + residual_output) * np.sqrt(0.5)
             
             # Step 5:
-            layer_output = tf.reshape(layer_output, [tf.shape(layer_output)[0]*layer_output.shape[1], layer_output.shape[2]])
-            self.encoder_output_ = tf.matmul(layer_output, self.dense_layer_2, name = "Layer_2_MatMul_enc")
-            self.encoder_output_ = tf.reshape(self.encoder_output_, [tf.shape(self.encoder_output_)[0]/self.max_length, self.max_length, self.encoder_output_.shape[1]])
+            # layer_output = tf.reshape(layer_output, (tf.shape(layer_output)[0]*layer_output.shape[1], layer_output.shape[2]))
+            layer_output = np.reshape(layer_output, (layer_output.shape[0]*layer_output.shape[1], layer_output.shape[2]))
+            self.encoder_output_ = np.matmul(layer_output, self.dense_layer_2)
+            self.encoder_output_ = np.reshape(self.encoder_output_, (self.encoder_output_.shape[0]/self.max_length, self.max_length, self.encoder_output_.shape[1]))
 
             # Step 6:
             self.encoder_attention_ = (self.encoder_output_ + self.X) * np.sqrt(0.5)
@@ -114,10 +134,3 @@ class ConvEncoder():
                 sess.run(tf.compat.v1.global_variables_initializer())
                 writer.add_graph(sess.graph)
         return (self.prob_output)
-
-
-
-
-        
-
-
