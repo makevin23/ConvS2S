@@ -36,35 +36,38 @@ class Embed():
         self.Y = np.asarray(Y_)
         self.Y = np.expand_dims(self.Y, 1)
 
+    
+
+    @tf.function
+    def train_step(self, nce_weights, nce_biases, train_inputs, train_labels):
+        embed = tf.nn.embedding_lookup(self.embedding_words, train_inputs)
+
+        loss = tf.reduce_mean(
+            tf.nn.nce_loss(
+                weights = nce_weights,
+                biases = nce_biases,
+                labels = train_labels,
+                inputs = embed,
+                num_sampled = 8,
+                num_classes = self.vocab_size
+            )
+        )
+        optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate = 0.1)
+
+        optimizer.minimize(loss, var_list=self.embedding_words)
+
+
     def train_embedder(self, X):
         self.generate_input_pairs(X)
 
         self.embedding_words = tf.Variable(tf.random.uniform(
             [self.vocab_size, self.embedding_size], -1, 1), name="Embedder")
+        print(self.embedding_words)
         nce_weights = tf.Variable(tf.random.truncated_normal(
             [self.vocab_size, self.embedding_size], stddev=1/np.sqrt(self.embedding_size)), name="Embedding_Layer")
         nce_biases = tf.Variable(
             tf.zeros([self.vocab_size]), name="Embedding_Biases")
         n_batches = len(self.X) // self.batch_size
-        train_inputs = tf.keras.Input(
-            dtype=tf.int32, shape=[self.batch_size], name="Dictionary_Input")
-        train_labels = tf.keras.Input(
-            dtype=tf.int32, shape=[self.batch_size], name="Embedded_Output")
-
-        embed = tf.nn.embedding_lookup(self.embedding_words, train_inputs)
-
-        loss = tf.reduce_mean(
-            tf.nn.nce_loss(
-                weights=nce_weights,
-                biases=nce_biases,
-                labels=train_labels,
-                inputs=embed,
-                num_sampled=8,
-                num_classes=self.vocab_size
-            )
-        )
-
-        optimizer = tf.keras.optimizers.SGD(learning_rate=0.1).minimize(loss)
 
         # training part
         for _i in range(100):
@@ -72,8 +75,12 @@ class Embed():
             np.random.shuffle(index_)
             index = []
             for i in range(n_batches):
-                index.append(index_[(self.batch_size*i):(self.batch_size(i+1))])
+                    index.append(index_[(self.batch_size*i):(self.batch_size*(i + 1))])
             for batch in index:
+                train_inputs = self.X[batch]
+                train_labels = self.Y[batch]
+                self.train_step(nce_weights, nce_biases, train_inputs, train_labels)
+        print(self.embedding_words)
                 
 
                 
@@ -104,20 +111,19 @@ class Embed():
         return (self.get_embedding(X) + self.get_position_embedding(X))
 
     def generate_vocab(self, embedding_vec):
-        input_vec = tf.keras.Input(dtype=tf.float32, shape=[
-                                   None, self.embedding_size])
+        input_vec = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.embedding_size], name = "Inverse_Input")
 
+        # The word is just the argmax of the multiplication 
+        # of the embedding matrix and the input embedding pair
         vocab = tf.matmul(
-            tf.nn.l2_normalize(self.embedding_words, axis=1),
-            tf.nn.l2_normalize(input_vec, axis=1),
-            transpose_b=True
+            tf.nn.l2_normalize(self.embedding_words, axis = 1),
+            tf.nn.l2_normalize(input_vec, axis = 1),
+            transpose_b = True
         )
-
-        index_ = tf.argmax(vocab, axis=1)
-
-        # Session
-        index = 
-
+        index_ = tf.argmax(vocab, axis = 1)
+        with tf.compat.v1.Session() as sess:
+            sess.run(tf.compat.v1.global_variables_initializer())
+            index = sess.run(index_, feed_dict = { input_vec : embedding_vec })
         return index
 
     def one_hot_encoding(self, X):
