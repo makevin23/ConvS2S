@@ -43,6 +43,7 @@ class ConvDecoder():
         self.embedding_size = embedding_size
         self.num_layers = num_layers
         self.p = dropout
+        self.dropout_layer = tf.keras.layers.Dropout(1-self.p)
         self.is_training = is_training
         self.kernel_size = [5, self.hidden_size]
 
@@ -56,9 +57,9 @@ class ConvDecoder():
         
     def for_decoder(self, encoder_outputs, encoder_attention):
         with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
-            self.input_x = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length - 1, self.embedding_size], name = "Decoding_Input")
+            # self.input_x = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length - 1, self.embedding_size], name = "Decoding_Input")
             # Step 1:
-            self.input_x = tf.compat.v1.nn.dropout(self.input_x, keep_prob = self.p)
+            self.input_x = self.dropout_layer(self.input_x, training=True)
             temp = tf.reshape(self.input_x, [tf.shape(self.input_x)[0]*self.input_x.shape[1], self.input_x.shape[2]])
 
             # Step 2:
@@ -69,7 +70,7 @@ class ConvDecoder():
 
                 # Step 3
                 residual_output = layer_output
-                dl1_out = tf.compat.v1.nn.dropout(layer_output, keep_prob = self.p)
+                dl1_out = self.dropout_layer(layer_output, training=True)
                 dl1_out = tf.expand_dims(layer_output, axis = 0)
                 self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_layer_Dec")
                 glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
@@ -100,16 +101,16 @@ class ConvDecoder():
             self.prob_output = tf.matmul(output, self.dense_layer_3, name = "Layer_3_Dec_MatMul")
             self.prob_output = tf.reshape(self.prob_output, [tf.shape(self.prob_output)[0]/(self.max_length - 1), self.max_length - 1, self.vocab_size])
             self.prob_output = tf.nn.softmax(self.prob_output, 2)
-            writer = tf.compat.v1.summary.FileWriter(os.getcwd() + '/TensorBoard_' + str(np.random.randint(0, 10000)))
-            with tf.compat.v1.Session() as sess:
-                sess.run(tf.compat.v1.global_variables_initializer())
-                writer.add_graph(sess.graph)
+            # writer = tf.compat.v1.summary.FileWriter(os.getcwd() + '/TensorBoard_' + str(np.random.randint(0, 10000)))
+            # with tf.compat.v1.Session() as sess:
+            #     sess.run(tf.compat.v1.global_variables_initializer())
+            #     writer.add_graph(sess.graph)
         return (self.prob_output)
     
     def rev_decoder(self):
         with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
-            self.input_x_rev = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length, self.embedding_size], name = "Decoding_Input_rev")
-            self.input_x_rev = tf.compat.v1.nn.dropout(self.input_x_rev, keep_prob = self.p)
+            # self.input_x_rev = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length, self.embedding_size], name = "Decoding_Input_rev")
+            self.input_x_rev = self.dropout_layer(self.input_x_rev, training=True)
             temp = tf.reshape(self.input_x_rev, [tf.shape(self.input_x_rev)[0]*self.input_x_rev.shape[1], self.input_x_rev.shape[2]])
             dl1_out_ = tf.matmul(temp, self.dense_layer_1, name = "Layer_1_MatMul_dec_rev")
             dl1_out_ = tf.reshape(dl1_out_, [tf.shape(dl1_out_)[0]/self.max_length, self.max_length, self.hidden_size])
@@ -119,7 +120,7 @@ class ConvDecoder():
                 # Step 3:
                 residual_output = layer_output
                 self.checker = layer_output
-                dl1_out = tf.compat.v1.nn.dropout(layer_output, keep_prob = self.p)
+                dl1_out = self.dropout_layer(layer_output, training=True)
                 dl1_out = tf.expand_dims(dl1_out, axis = 0)
                 self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_Layer_Dec")
                 glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
