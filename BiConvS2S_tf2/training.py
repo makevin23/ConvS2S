@@ -55,17 +55,8 @@ class Translator():
         encoder_output, encoder_attention = self.encoder.for_encoder()
         prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
         loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
-
-        with tf.GradientTape() as tape:
-            loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
-            
-        # gradients = tape.gradient(loss_fxn_for, self.encoder.conv_layer)
-        # print(gradients)
-        # print(self.encoder.conv_layer)
-        # optimizer.apply_gradients(zip(gradients, self.encoder.conv_layer))
         # TODO: add var_list in minimize call, self.encoder.conv_layer?
-        # https://www.tensorflow.org/api_docs/python/tf/compat/v1/train/AdamOptimizer#compute_gradients
-        optimizer.minimize(loss_fxn_for, var_list=self.encoder.conv_layer)
+        optimizer.minimize(loss_fxn_for)
         return loss_fxn_for
 
     @tf.function
@@ -75,7 +66,7 @@ class Translator():
         prob_output_rev = self.encoder.rev_encoder(decoder_output, decoder_attention)
         loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
         # TODO: add var_list in minimize call, self.decoder.conv_layer?
-        optimizer.minimize(loss_fxn_rev, var_list = self.decoder.conv_layer)
+        optimizer.minimize(loss_fxn_rev)
         return loss_fxn_rev
 
 # Training the model:
