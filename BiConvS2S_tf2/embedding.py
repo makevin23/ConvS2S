@@ -62,7 +62,7 @@ class Embed():
 
         self.embedding_words = tf.Variable(tf.random.uniform(
             [self.vocab_size, self.embedding_size], -1, 1), name="Embedder")
-        print(self.embedding_words)
+
         nce_weights = tf.Variable(tf.random.truncated_normal(
             [self.vocab_size, self.embedding_size], stddev=1/np.sqrt(self.embedding_size)), name="Embedding_Layer")
         nce_biases = tf.Variable(
@@ -80,7 +80,6 @@ class Embed():
                 train_inputs = self.X[batch]
                 train_labels = self.Y[batch]
                 self.train_step(nce_weights, nce_biases, train_inputs, train_labels)
-        print(self.embedding_words)
                 
 
     @tf.function
@@ -107,7 +106,7 @@ class Embed():
         for vec in self.position_vectors:
                 temp = []
                 for value in vec:
-                    temp.append(self.get_embedding(value))
+                    temp.append(self.look_up_position(value))
                 position.append(np.asarray(temp))
         return np.asarray(position)
 
