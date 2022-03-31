@@ -55,7 +55,7 @@ class Translator():
         encoder_output, encoder_attention = self.encoder.for_encoder()
         prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
         loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
-        # TODO: add var_list in minimize call, self.encoder.conv_layer?
+        # TODO: add var_list in minimize call, all layers in encoder?
         optimizer.minimize(loss_fxn_for)
         return loss_fxn_for
 
@@ -65,7 +65,7 @@ class Translator():
         decoder_output, decoder_attention = self.decoder.rev_decoder()
         prob_output_rev = self.encoder.rev_encoder(decoder_output, decoder_attention)
         loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
-        # TODO: add var_list in minimize call, self.decoder.conv_layer?
+        # TODO: add var_list in minimize call, all layers in decoder?
         optimizer.minimize(loss_fxn_rev)
         return loss_fxn_rev
 
