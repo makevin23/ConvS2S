@@ -51,19 +51,21 @@ class Translator():
 
     @tf.function
     def train_step_for(self):
-        optimizer = tf.keras.optimizer.Adam(learning_rate = self.lr)
+        optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
         encoder_output, encoder_attention = self.encoder.for_encoder()
         prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
         loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
+        # TODO: add var_list in minimize call, self.encoder.conv_layer?
         optimizer.minimize(loss_fxn_for)
         return loss_fxn_for
 
     @tf.function
     def train_step_rev(self):
-        optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate = self.lr)
+        optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
         decoder_output, decoder_attention = self.decoder.rev_decoder()
         prob_output_rev = self.encoder.rev_encoder(decoder_output, decoder_attention)
         loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
+        # TODO: add var_list in minimize call, self.decoder.conv_layer?
         optimizer.minimize(loss_fxn_rev)
         return loss_fxn_rev
 
@@ -81,7 +83,6 @@ class Translator():
         # batch size, make the last batch with the last (batch_size) inputs
         if(index_.size % self.batch_size != 0):
             index.append(index_[-self.batch_size::])
-        
         # Generate the embeddings for the training data and the labels
         train_embeddings = self.embedder.generate_embeddings(inputs)
         label_embeddings = self.embedder.generate_embeddings(targets)
@@ -108,7 +109,7 @@ class Translator():
                 # Run the minimization and the loss function op
                 self.init_train_step(input_x, decoder_input, target, encoder_input_rev, input_x_rev, target_rev)
                 loss_val_for = self.train_step_for()
-                loss_val_rev =  self.train_step_rev()
+                loss_val_rev = self.train_step_rev()
 
             
                 # Run the summary merger op and add the summary to the tensorboard tfevents file

@@ -59,7 +59,6 @@ class ConvEncoder():
                 dl1_out = self.dropout_layer(layer_output)
                 dl1_out = tf.expand_dims(dl1_out, axis = 0)
                 self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_Layer_Encoder")
-                # self.conv_layer = conv2d_layer(dl1_out)
                 glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
                 glu = tf.squeeze(glu_output, axis = 0)
                 layer_output = (glu + residual_output) * np.sqrt(0.5)
