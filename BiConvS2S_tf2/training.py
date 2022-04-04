@@ -56,7 +56,9 @@ class Translator():
         prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
         loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
         # TODO: add var_list in minimize call, all layers in encoder?
-        optimizer.minimize(loss_fxn_for)
+        coder_layers = [self.encoder.dense_layer_1, self.encoder.dense_layer_2, self.encoder.dense_layer_3, self.encoder.layer_conv_embedding, self.encoder.layer_embedding_conv,
+                        self.decoder.dense_layer_1, self.decoder.dense_layer_2, self.decoder.dense_layer_3, self.decoder.layer_conv_embedding, self.decoder.layer_embedding_conv]
+        optimizer.minimize(loss_fxn_for, var_list=coder_layers)
         return loss_fxn_for
 
     @tf.function

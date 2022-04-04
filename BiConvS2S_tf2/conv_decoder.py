@@ -48,90 +48,88 @@ class ConvDecoder():
         self.kernel_size = [5, self.hidden_size]
 
         # Define the various placeholders and layers
-        with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
-            self.dense_layer_1 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Dec")
-            self.dense_layer_2 = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Dec")
-            self.dense_layer_3 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.vocab_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_3_Dec")
-            self.layer_conv_embedding = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Hid_to_Embed_att_dec")
-            self.layer_embedding_conv = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
-        
+        self.dense_layer_1 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Dec")
+        self.dense_layer_2 = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Dec")
+        self.dense_layer_3 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.vocab_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_3_Dec")
+        self.layer_conv_embedding = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Hid_to_Embed_att_dec")
+        self.layer_embedding_conv = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
+
     def for_decoder(self, encoder_outputs, encoder_attention):
-        with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
-            # self.input_x = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length - 1, self.embedding_size], name = "Decoding_Input")
-            # Step 1:
-            self.input_x = self.dropout_layer(self.input_x, training=True)
-            temp = tf.reshape(self.input_x, [tf.shape(self.input_x)[0]*self.input_x.shape[1], self.input_x.shape[2]])
+        # self.input_x = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length - 1, self.embedding_size], name = "Decoding_Input")
+        # Step 1:
+        self.input_x = self.dropout_layer(self.input_x, training=True)
+        temp = tf.reshape(self.input_x, [tf.shape(self.input_x)[0]*self.input_x.shape[1], self.input_x.shape[2]])
 
-            # Step 2:
-            dl1_out_ = tf.matmul(temp, self.dense_layer_1, name = "Dec_Layer_1_MatMul")
-            dl1_out_ = tf.reshape(dl1_out_,  [tf.shape(dl1_out_)[0]/(self.max_length - 1), self.max_length - 1, self.hidden_size])
-            layer_output = dl1_out_
-            for _ in range(self.num_layers):
+        # Step 2:
+        dl1_out_ = tf.matmul(temp, self.dense_layer_1, name = "Dec_Layer_1_MatMul")
+        dl1_out_ = tf.reshape(dl1_out_,  [tf.shape(dl1_out_)[0]/(self.max_length - 1), self.max_length - 1, self.hidden_size])
+        layer_output = dl1_out_
+        for _ in range(self.num_layers):
 
-                # Step 3
-                residual_output = layer_output
-                dl1_out = self.dropout_layer(layer_output, training=True)
-                dl1_out = tf.expand_dims(layer_output, axis = 0)
-                self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_layer_Dec")
-                glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
-                glu = tf.squeeze(glu_output, axis = 0)
-                layer_output = (glu + residual_output) * np.sqrt(0.5)
-                shape_out = tf.shape(layer_output)
+            # Step 3
+            residual_output = layer_output
+            dl1_out = self.dropout_layer(layer_output, training=True)
+            dl1_out = tf.expand_dims(layer_output, axis = 0)
+            self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_layer_Dec")
+            glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
+            glu = tf.squeeze(glu_output, axis = 0)
+            layer_output = (glu + residual_output) * np.sqrt(0.5)
+            shape_out = tf.shape(layer_output)
 
-                # Step 4:
-                layer_output = tf.reshape(layer_output, [tf.shape(layer_output)[0]*layer_output.shape[1], layer_output.shape[2]])
-                post_glu_output = tf.matmul(layer_output, self.layer_conv_embedding, name = "Hid_to_Embed_att_MatMul")
-                post_glu_output = tf.reshape(post_glu_output, [tf.shape(post_glu_output)[0]/(self.max_length - 1), self.max_length - 1, self.embedding_size])
-                encoder_attention_logits = tf.matmul( post_glu_output, tf.transpose(encoder_attention, perm = [0, 2, 1]), name = "Encoder_Attention_MatMul")
-                encoder_attention_output = tf.nn.softmax(encoder_attention_logits, axis = 2)
-
-                # Step 5:
-                attention_output = tf.matmul(encoder_attention_output, encoder_outputs, name = "Attention_Output")
-                attention_output = attention_output * (encoder_outputs.shape.as_list()[2] * np.sqrt(2 / encoder_outputs.shape.as_list()[2]))
-                layer_output = tf.reshape(attention_output, [tf.shape(attention_output)[0]*attention_output.shape[1], attention_output.shape[2]])
-                layer_output = tf.matmul(layer_output, self.layer_embedding_conv, name = "Embed_to_hid_MatMul")
-                layer_output = tf.reshape(layer_output, shape_out)
-            
-            # Step 6:
-            layer_output = (layer_output + dl1_out_) * np.sqrt(0.5)
+            # Step 4:
             layer_output = tf.reshape(layer_output, [tf.shape(layer_output)[0]*layer_output.shape[1], layer_output.shape[2]])
-            output = tf.matmul(layer_output, self.dense_layer_2, name = "Layer_2_Dec_MatMul")
+            post_glu_output = tf.matmul(layer_output, self.layer_conv_embedding, name = "Hid_to_Embed_att_MatMul")
+            post_glu_output = tf.reshape(post_glu_output, [tf.shape(post_glu_output)[0]/(self.max_length - 1), self.max_length - 1, self.embedding_size])
+            encoder_attention_logits = tf.matmul( post_glu_output, tf.transpose(encoder_attention, perm = [0, 2, 1]), name = "Encoder_Attention_MatMul")
+            encoder_attention_output = tf.nn.softmax(encoder_attention_logits, axis = 2)
 
-            # Step 7:
-            self.prob_output = tf.matmul(output, self.dense_layer_3, name = "Layer_3_Dec_MatMul")
-            self.prob_output = tf.reshape(self.prob_output, [tf.shape(self.prob_output)[0]/(self.max_length - 1), self.max_length - 1, self.vocab_size])
-            self.prob_output = tf.nn.softmax(self.prob_output, 2)
-            # writer = tf.compat.v1.summary.FileWriter(os.getcwd() + '/TensorBoard_' + str(np.random.randint(0, 10000)))
-            # with tf.compat.v1.Session() as sess:
-            #     sess.run(tf.compat.v1.global_variables_initializer())
-            #     writer.add_graph(sess.graph)
+            # Step 5:
+            attention_output = tf.matmul(encoder_attention_output, encoder_outputs, name = "Attention_Output")
+            attention_output = attention_output * (encoder_outputs.shape.as_list()[2] * np.sqrt(2 / encoder_outputs.shape.as_list()[2]))
+            layer_output = tf.reshape(attention_output, [tf.shape(attention_output)[0]*attention_output.shape[1], attention_output.shape[2]])
+            layer_output = tf.matmul(layer_output, self.layer_embedding_conv, name = "Embed_to_hid_MatMul")
+            layer_output = tf.reshape(layer_output, shape_out)
+        
+        # Step 6:
+        layer_output = (layer_output + dl1_out_) * np.sqrt(0.5)
+        layer_output = tf.reshape(layer_output, [tf.shape(layer_output)[0]*layer_output.shape[1], layer_output.shape[2]])
+        output = tf.matmul(layer_output, self.dense_layer_2, name = "Layer_2_Dec_MatMul")
+
+        # Step 7:
+        self.prob_output = tf.matmul(output, self.dense_layer_3, name = "Layer_3_Dec_MatMul")
+        self.prob_output = tf.reshape(self.prob_output, [tf.shape(self.prob_output)[0]/(self.max_length - 1), self.max_length - 1, self.vocab_size])
+        self.prob_output = tf.nn.softmax(self.prob_output, 2)
+        # writer = tf.compat.v1.summary.FileWriter(os.getcwd() + '/TensorBoard_' + str(np.random.randint(0, 10000)))
+        # with tf.compat.v1.Session() as sess:
+        #     sess.run(tf.compat.v1.global_variables_initializer())
+        #     writer.add_graph(sess.graph)
         return (self.prob_output)
     
     def rev_decoder(self):
-        with tf.compat.v1.variable_scope("ConvS2S", reuse = tf.compat.v1.AUTO_REUSE):
-            # self.input_x_rev = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length, self.embedding_size], name = "Decoding_Input_rev")
-            self.input_x_rev = self.dropout_layer(self.input_x_rev, training=True)
-            temp = tf.reshape(self.input_x_rev, [tf.shape(self.input_x_rev)[0]*self.input_x_rev.shape[1], self.input_x_rev.shape[2]])
-            dl1_out_ = tf.matmul(temp, self.dense_layer_1, name = "Layer_1_MatMul_dec_rev")
-            dl1_out_ = tf.reshape(dl1_out_, [tf.shape(dl1_out_)[0]/self.max_length, self.max_length, self.hidden_size])
-            layer_output = dl1_out_
-            for _ in range(self.num_layers):
+        # self.input_x_rev = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length, self.embedding_size], name = "Decoding_Input_rev")
+        self.input_x_rev = self.dropout_layer(self.input_x_rev, training=True)
+        temp = tf.reshape(self.input_x_rev, [tf.shape(self.input_x_rev)[0]*self.input_x_rev.shape[1], self.input_x_rev.shape[2]])
+        dl1_out_ = tf.matmul(temp, self.dense_layer_1, name = "Layer_1_MatMul_dec_rev")
+        dl1_out_ = tf.reshape(dl1_out_, [tf.shape(dl1_out_)[0]/self.max_length, self.max_length, self.hidden_size])
+        layer_output = dl1_out_
+        for _ in range(self.num_layers):
 
-                # Step 3:
-                residual_output = layer_output
-                self.checker = layer_output
-                dl1_out = self.dropout_layer(layer_output, training=True)
-                dl1_out = tf.expand_dims(dl1_out, axis = 0)
-                self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_Layer_Dec")
-                glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
-                glu = tf.squeeze(glu_output, axis = 0)
-                layer_output = (glu + residual_output) * np.sqrt(0.5)
-            
-            # Step 5:
-            layer_output = tf.reshape(layer_output, [tf.shape(layer_output)[0]*layer_output.shape[1], layer_output.shape[2]])
-            self.decoder_output_ = tf.matmul(layer_output, self.dense_layer_2, name = "Layer_2_MatMul_dec_rev")
-            self.decoder_output_ = tf.reshape(self.decoder_output_, [tf.shape(self.decoder_output_)[0]/self.max_length, self.max_length, self.decoder_output_.shape[1]])
+            # Step 3:
+            residual_output = layer_output
+            self.checker = layer_output
+            dl1_out = self.dropout_layer(layer_output, training=True)
+            dl1_out = tf.expand_dims(dl1_out, axis = 0)
+            self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_Layer_Dec")
+            glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
+            glu = tf.squeeze(glu_output, axis = 0)
+            layer_output = (glu + residual_output) * np.sqrt(0.5)
+        
+        # Step 5:
+        layer_output = tf.reshape(layer_output, [tf.shape(layer_output)[0]*layer_output.shape[1], layer_output.shape[2]])
+        self.decoder_output_ = tf.matmul(layer_output, self.dense_layer_2, name = "Layer_2_MatMul_dec_rev")
+        self.decoder_output_ = tf.reshape(self.decoder_output_, [tf.shape(self.decoder_output_)[0]/self.max_length, self.max_length, self.decoder_output_.shape[1]])
 
-            # Step 6:
-            self.decoder_attention_ = (self.decoder_output_ + self.input_x_rev) * np.sqrt(0.5)
+        # Step 6:
+        self.decoder_attention_ = (self.decoder_output_ + self.input_x_rev) * np.sqrt(0.5)
+        
         return self.decoder_output_, self.decoder_attention_
