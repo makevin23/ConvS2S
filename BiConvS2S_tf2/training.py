@@ -6,7 +6,7 @@ import os
 # The Translator class trains the network translating between languages
 
 class Translator():
-    def __init__(self, encoder, decoder, embedder, vocab, inverse_vocab, learning_rate = 0.0001, batch_size = 1, epochs = 100):
+    def __init__(self, encoder, decoder, embedder, vocab, inverse_vocab, learning_rate = 0.0001, batch_size = 1, epochs = 3):
         self.encoder = encoder
         self.decoder = decoder
         self.embedder = embedder
@@ -61,20 +61,23 @@ class Translator():
             #                 self.decoder.dense_layer_1, self.decoder.dense_layer_2, self.decoder.dense_layer_3, self.decoder.layer_conv_embedding, self.decoder.layer_embedding_conv, self.decoder.conv_layer]
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss_fxn_for, variables)
-            print(variables)
-            print(gradients)
+            # print(variables)
+            # print(gradients)
             optimizer.apply_gradients(zip(gradients, variables))
             # optimizer.minimize(loss_fxn_for, var_list=coder_layers, tape=tape)
         return loss_fxn_for
 
-    @tf.function
+    # @tf.function
     def train_step_rev(self):
-        optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
-        decoder_output, decoder_attention = self.decoder.rev_decoder()
-        prob_output_rev = self.encoder.rev_encoder(decoder_output, decoder_attention)
-        loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
-        # TODO: add var_list in minimize call, all layers in decoder?
-        optimizer.minimize(loss_fxn_rev)
+        with tf.GradientTape() as tape:
+            optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
+            decoder_output, decoder_attention = self.decoder.rev_decoder()
+            prob_output_rev = self.encoder.rev_encoder(decoder_output, decoder_attention)
+            loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
+            # TODO: add var_list in minimize call, all layers in decoder?
+            variables = self.encoder.trainable_variables + self.decoder.trainable_variables
+            gradients = tape.gradient(loss_fxn_rev, variables)
+            optimizer.apply_gradients(zip(gradients, variables))
         return loss_fxn_rev
 
 # Training the model:

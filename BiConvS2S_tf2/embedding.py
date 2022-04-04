@@ -91,6 +91,7 @@ class Embed():
         embedded_words = []
         for sentence in X:
                 vecc = []
+                sentence = [int(x) for x in sentence]
                 for word in sentence:
                     vecc.append(self.look_up_word(word))
                 embedded_words.append(np.asarray(vecc))

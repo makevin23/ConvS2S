@@ -110,7 +110,7 @@ class ConvDecoder(tf.keras.Model):
         # self.input_x_rev = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length, self.embedding_size], name = "Decoding_Input_rev")
         self.input_x_rev = self.dropout_layer(self.input_x_rev, training=True)
         temp = tf.reshape(self.input_x_rev, [tf.shape(self.input_x_rev)[0]*self.input_x_rev.shape[1], self.input_x_rev.shape[2]])
-        dl1_out_ = 
+        dl1_out_ = self.dense_layer_1(temp)
         dl1_out_ = tf.reshape(dl1_out_, [tf.shape(dl1_out_)[0]/self.max_length, self.max_length, self.hidden_size])
         layer_output = dl1_out_
         for _ in range(self.num_layers):
@@ -120,14 +120,14 @@ class ConvDecoder(tf.keras.Model):
             self.checker = layer_output
             dl1_out = self.dropout_layer(layer_output, training=True)
             dl1_out = tf.expand_dims(dl1_out, axis = 0)
-            self.conv_layer = tf.compat.v1.layers.conv2d(dl1_out, 2 * self.hidden_size, self.kernel_size, padding = "same", name = "Conv_Layer_Dec")
-            glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
+            conv_layer_output = self.conv_layer(dl1_out)
+            glu_output = conv_layer_output[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(conv_layer_output[:, :, :, self.hidden_size:(2*self.hidden_size)])
             glu = tf.squeeze(glu_output, axis = 0)
             layer_output = (glu + residual_output) * np.sqrt(0.5)
         
         # Step 5:
         layer_output = tf.reshape(layer_output, [tf.shape(layer_output)[0]*layer_output.shape[1], layer_output.shape[2]])
-        self.decoder_output_ = tf.matmul(layer_output, self.dense_layer_2, name = "Layer_2_MatMul_dec_rev")
+        self.decoder_output_ = self.dense_layer_2(layer_output)
         self.decoder_output_ = tf.reshape(self.decoder_output_, [tf.shape(self.decoder_output_)[0]/self.max_length, self.max_length, self.decoder_output_.shape[1]])
 
         # Step 6:
