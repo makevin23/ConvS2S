@@ -38,6 +38,7 @@ class ConvEncoder(tf.keras.Model):
         self.dense_layer_3 = tf.keras.layers.Dense(self.vocab_size, activation="relu")
         self.layer_conv_embedding = tf.keras.layers.Dense(self.embedding_size, activation="relu")
         self.layer_embedding_conv = tf.keras.layers.Dense(self.hidden_size, activation="relu")
+        self.conv_layer = tf.keras.layers.Conv2D(filters=2 * self.hidden_size, kernel_size=self.kernel_size, padding="same")
         
         # self.dense_layer_1 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Encoder")
         # self.dense_layer_2 = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Encoder")
@@ -52,7 +53,7 @@ class ConvEncoder(tf.keras.Model):
         # Step 2:
         self.X = self.dropout_layer(self.X, training=True)
         temp = tf.reshape(self.X, [tf.shape(self.X)[0]*self.X.shape[1], self.X.shape[2]])
-        dl1_out_ = self.dense_layer_1.call(temp)
+        dl1_out_ = self.dense_layer_1(temp)
         dl1_out_ = tf.reshape(dl1_out_, [tf.shape(dl1_out_)[0]/self.max_length, self.max_length, self.hidden_size])
         layer_output = dl1_out_
 
@@ -63,14 +64,14 @@ class ConvEncoder(tf.keras.Model):
             self.checker = layer_output
             dl1_out = self.dropout_layer(layer_output)
             dl1_out = tf.expand_dims(dl1_out, axis = 0)
-            self.conv_layer = tf.keras.layers.Conv2D(filters=2 * self.hidden_size, kernels_size=self.kernel_size)(dl1_out)
-            glu_output = self.conv_layer[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(self.conv_layer[:, :, :, self.hidden_size:(2*self.hidden_size)])
+            conv_layer_output = self.conv_layer(dl1_out)
+            glu_output = conv_layer_output[:, :, :, 0:self.hidden_size] * tf.nn.sigmoid(conv_layer_output[:, :, :, self.hidden_size:(2*self.hidden_size)])
             glu = tf.squeeze(glu_output, axis = 0)
             layer_output = (glu + residual_output) * np.sqrt(0.5)
         
         # Step 5:
         layer_output = tf.reshape(layer_output, [tf.shape(layer_output)[0]*layer_output.shape[1], layer_output.shape[2]])
-        self.encoder_output_ = tf.matmul(layer_output, self.dense_layer_2, name = "Layer_2_MatMul_enc")
+        self.encoder_output_ = self.dense_layer_2(layer_output)
         self.encoder_output_ = tf.reshape(self.encoder_output_, [tf.shape(self.encoder_output_)[0]/self.max_length, self.max_length, self.encoder_output_.shape[1]])
 
         # Step 6:

@@ -49,7 +49,7 @@ class Translator():
         self.decoder.input_x_rev = input_x_rev
         self.target_pl_rev = target_rev
 
-    @tf.function
+    # @tf.function
     def train_step_for(self):
         with tf.GradientTape() as tape:
             optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
@@ -61,7 +61,8 @@ class Translator():
             #                 self.decoder.dense_layer_1, self.decoder.dense_layer_2, self.decoder.dense_layer_3, self.decoder.layer_conv_embedding, self.decoder.layer_embedding_conv, self.decoder.conv_layer]
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss_fxn_for, variables)
-
+            print(variables)
+            print(gradients)
             optimizer.apply_gradients(zip(gradients, variables))
             # optimizer.minimize(loss_fxn_for, var_list=coder_layers, tape=tape)
         return loss_fxn_for
