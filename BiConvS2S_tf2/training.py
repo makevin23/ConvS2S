@@ -51,7 +51,7 @@ class Translator():
 
     @tf.function
     def train_step_for(self):
-        optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
+        optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate = self.lr)
         encoder_output, encoder_attention = self.encoder.for_encoder()
         prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
         loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
@@ -63,12 +63,14 @@ class Translator():
 
     @tf.function
     def train_step_rev(self):
-        optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
+        optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate = self.lr)
         decoder_output, decoder_attention = self.decoder.rev_decoder()
         prob_output_rev = self.encoder.rev_encoder(decoder_output, decoder_attention)
         loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
         # TODO: add var_list in minimize call, all layers in decoder?
-        optimizer.minimize(loss_fxn_rev)
+        coder_layers = [self.encoder.dense_layer_1, self.encoder.dense_layer_2, self.encoder.dense_layer_3, self.encoder.layer_conv_embedding, self.encoder.layer_embedding_conv,
+                        self.decoder.dense_layer_1, self.decoder.dense_layer_2, self.decoder.dense_layer_3, self.decoder.layer_conv_embedding, self.decoder.layer_embedding_conv]
+        optimizer.minimize(loss_fxn_rev, var_list=coder_layers)
         return loss_fxn_rev
 
 # Training the model:
