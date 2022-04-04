@@ -54,10 +54,10 @@ class Translator():
         optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate = self.lr)
         encoder_output, encoder_attention = self.encoder.for_encoder()
         prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
-        loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
+        loss_fxn_for = lambda: tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
         # TODO: add var_list in minimize call, all layers in encoder?
-        coder_layers = [self.encoder.dense_layer_1, self.encoder.dense_layer_2, self.encoder.dense_layer_3, self.encoder.layer_conv_embedding, self.encoder.layer_embedding_conv,
-                        self.decoder.dense_layer_1, self.decoder.dense_layer_2, self.decoder.dense_layer_3, self.decoder.layer_conv_embedding, self.decoder.layer_embedding_conv]
+        coder_layers = [self.encoder.dense_layer_1, self.encoder.dense_layer_2, self.encoder.dense_layer_3, self.encoder.layer_conv_embedding, self.encoder.layer_embedding_conv, self.encoder.conv_layer,
+                        self.decoder.dense_layer_1, self.decoder.dense_layer_2, self.decoder.dense_layer_3, self.decoder.layer_conv_embedding, self.decoder.layer_embedding_conv, self.decoder.conv_layer]
         optimizer.minimize(loss_fxn_for, var_list=coder_layers)
         return loss_fxn_for
 
@@ -66,7 +66,7 @@ class Translator():
         optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate = self.lr)
         decoder_output, decoder_attention = self.decoder.rev_decoder()
         prob_output_rev = self.encoder.rev_encoder(decoder_output, decoder_attention)
-        loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
+        loss_fxn_rev = lambda: tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
         # TODO: add var_list in minimize call, all layers in decoder?
         coder_layers = [self.encoder.dense_layer_1, self.encoder.dense_layer_2, self.encoder.dense_layer_3, self.encoder.layer_conv_embedding, self.encoder.layer_embedding_conv,
                         self.decoder.dense_layer_1, self.decoder.dense_layer_2, self.decoder.dense_layer_3, self.decoder.layer_conv_embedding, self.decoder.layer_embedding_conv]
