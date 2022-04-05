@@ -133,6 +133,11 @@ class Translator():
             print("EPOCH " + str(i + 1) + " COMPLETED !")
             print("LOSS : " + str(loss[i]))
 
+        # save the model
+        self.encoder.save_weights(os.getcwd() + "/encoder_training_checkpoints")
+        self.decoder.save_weights(os.getcwd() + "/decoder_training_checkpoints")
+        print("Model saved !")
+        # Create a folder to store the weights of the model
         print("Finished Optimization")
 
 
