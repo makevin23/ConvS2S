@@ -17,6 +17,7 @@ class Translator():
         self.batch_size = batch_size
         self.epochs = epochs
         self.lr = learning_rate
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
         
         # self.target_pl = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.decoder.max_length - 1, self.vocab_size], name = "Forward_targets")
         # self.target_pl_rev = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.encoder.max_length - 1, self.vocab_size], name = "Reverse_targets")
@@ -52,7 +53,6 @@ class Translator():
     # @tf.function
     def train_step_for(self):
         with tf.GradientTape() as tape:
-            optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
             encoder_output, encoder_attention = self.encoder.for_encoder()
             prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
             loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
@@ -63,21 +63,20 @@ class Translator():
             gradients = tape.gradient(loss_fxn_for, variables)
             # print(variables)
             # print(gradients)
-            optimizer.apply_gradients(zip(gradients, variables))
+            self.optimizer.apply_gradients(zip(gradients, variables))
             # optimizer.minimize(loss_fxn_for, var_list=coder_layers, tape=tape)
         return loss_fxn_for
 
     # @tf.function
     def train_step_rev(self):
         with tf.GradientTape() as tape:
-            optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
             decoder_output, decoder_attention = self.decoder.rev_decoder()
             prob_output_rev = self.encoder.rev_encoder(decoder_output, decoder_attention)
             loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
             # TODO: add var_list in minimize call, all layers in decoder?
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss_fxn_rev, variables)
-            optimizer.apply_gradients(zip(gradients, variables))
+            self.optimizer.apply_gradients(zip(gradients, variables))
         return loss_fxn_rev
 
 # Training the model:
@@ -132,10 +131,10 @@ class Translator():
             # Print the average loss after each epoch
             print("EPOCH " + str(i + 1) + " COMPLETED !")
             print("LOSS : " + str(loss[i]))
-
+        checkpoint = tf.train.Checkpoint(optimizer=self.optimizer, encoder=self.encoder,decoder=self.decoder)
         # save the model
-        self.encoder.save_weights(os.getcwd() + "/encoder_training_checkpoints")
-        self.decoder.save_weights(os.getcwd() + "/decoder_training_checkpoints")
+        checkpoint.save("ckpt")
+        # tf.keras.models.save_model(self.decoder, "decoder_model.h5", save_format = "h5")
         print("Model saved !")
         # Create a folder to store the weights of the model
         print("Finished Optimization")

@@ -5,6 +5,7 @@
 #####################################################################
 
 import os
+import pickle
 import tensorflow as tf
 import numpy as np
 import string
@@ -109,9 +110,22 @@ for sentence in target:
 train_x = np.asarray([np.pad(example, [0, max_input_length - len(example) + 2], mode = 'constant') for example in train_x]).astype(int)
 train_y = np.asarray([np.pad(example, [0, max_target_length - len(example) + 2], mode = 'constant') for example in train_y]).astype(int)
 
+with open('word_to_index.pkl', 'wb') as f:
+    pickle.dump(word_to_index, f)
+
+with open('index_to_word.pkl', 'wb') as f:
+    pickle.dump(index_to_word, f)
+
+with open('max_input_length.pkl', 'wb') as f:
+    pickle.dump(max_input_length, f)
+
+with open('max_target_length.pkl', 'wb') as f:
+    pickle.dump(max_target_length, f)
+
 # Train the Embedder Network on the examples
 embedder = embedding.Embed(word_to_index, 512, 16)
 embedder.train_embedder(train_x)
+np.save('embedding_words.npy', embedder.embedding_words)
 # train_embeddings = embedder.generate_embeddings(train_x)
 # label_embeddings = embedder.generate_embeddings(train_y)
 
@@ -124,7 +138,7 @@ trainer = training.Translator(Encoder, Decoder, embedder, word_to_index, index_t
 trainer(inputs = train_x, targets = train_y, is_training = True)
 
 # Check the output
-print(trainer(inputs = train_x))
+# print(trainer(inputs = train_x))
 
 
 
