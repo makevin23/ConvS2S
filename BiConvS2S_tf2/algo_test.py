@@ -145,4 +145,3 @@ trainer(inputs = train_x, targets = train_y, is_training = True)
 
 
 
-# test
