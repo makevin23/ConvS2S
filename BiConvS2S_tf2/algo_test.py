@@ -31,7 +31,9 @@ target = [
     "The weather is 19 and sunny"
 ]
 
-trained_model_dir = "BiConvS2S_tf2/trained_model"
+trained_model_dir = "BiConvS2S_tf2"
+ckpt_dir = os.path.join(trained_model_dir, "ckpt")
+pkl_dir = trained_model_dir + "/pkl"
 
 #######################################################################
 # Define the properties of the example corpus and generate the 
@@ -112,23 +114,23 @@ for sentence in target:
 train_x = np.asarray([np.pad(example, [0, max_input_length - len(example) + 2], mode = 'constant') for example in train_x]).astype(int)
 train_y = np.asarray([np.pad(example, [0, max_target_length - len(example) + 2], mode = 'constant') for example in train_y]).astype(int)
 
-os.mkdir(trained_model_dir)
-with open(trained_model_dir+'/word_to_index.pkl', 'wb') as f:
+os.mkdir(pkl_dir)
+with open(pkl_dir+'/word_to_index.pkl', 'wb') as f:
     pickle.dump(word_to_index, f)
 
-with open(trained_model_dir+'/index_to_word.pkl', 'wb') as f:
+with open(pkl_dir+'/index_to_word.pkl', 'wb') as f:
     pickle.dump(index_to_word, f)
 
-with open(trained_model_dir+'/max_input_length.pkl', 'wb') as f:
+with open(pkl_dir+'/max_input_length.pkl', 'wb') as f:
     pickle.dump(max_input_length, f)
 
-with open(trained_model_dir+'/max_target_length.pkl', 'wb') as f:
+with open(pkl_dir+'/max_target_length.pkl', 'wb') as f:
     pickle.dump(max_target_length, f)
 
 # Train the Embedder Network on the examples
 embedder = embedding.Embed(word_to_index, 512, 16)
 embedder.train_embedder(train_x)
-np.save(trained_model_dir+'/embedding_words.npy', embedder.embedding_words)
+np.save(pkl_dir+'/embedding_words.npy', embedder.embedding_words)
 # train_embeddings = embedder.generate_embeddings(train_x)
 # label_embeddings = embedder.generate_embeddings(train_y)
 
@@ -137,6 +139,6 @@ Encoder = conv_encoder.ConvEncoder(len(index_to_word), max_input_length + 2, 128
 Decoder = conv_decoder.ConvDecoder(len(index_to_word), max_target_length + 2, 128, 512, 1, 1)
 
 # Pass them to the trainer and train the CNN
-trainer = training.Translator(Encoder, Decoder, embedder, word_to_index, index_to_word)
+trainer = training.Translator(Encoder, Decoder, embedder, word_to_index, index_to_word, ckpt_dir)
 trainer(inputs = train_x, targets = train_y, is_training = True)
 

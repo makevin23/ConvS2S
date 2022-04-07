@@ -20,20 +20,22 @@ target = [
     "The weather is 19 and sunny"
 ]
 
-trained_model_dir = "BiConvS2S_tf2/trained_model"
+trained_model_dir = "BiConvS2S_tf2"
+pkl_dir = trained_model_dir + "/pkl"
+ckpt_dir = trained_model_dir + "/ckpt"
 
 # load parameters
-with open(trained_model_dir+'/max_input_length.pkl', 'rb') as f:
+with open(pkl_dir+'/max_input_length.pkl', 'rb') as f:
     max_input_length = pickle.load(f)
 
-with open(trained_model_dir+'/max_target_length.pkl', 'rb') as f:
+with open(pkl_dir+'/max_target_length.pkl', 'rb') as f:
     max_target_length = pickle.load(f)
 
 # load word index
-with open(trained_model_dir+'/word_to_index.pkl', 'rb') as f:
+with open(pkl_dir+'/word_to_index.pkl', 'rb') as f:
     word_to_index = pickle.load(f)
 
-with open(trained_model_dir+'/index_to_word.pkl', 'rb') as f:
+with open(pkl_dir+'/index_to_word.pkl', 'rb') as f:
     index_to_word = pickle.load(f)
 
 train_x = []
@@ -73,7 +75,7 @@ for sentence in examples:
 train_x = np.asarray([np.pad(example, [0, max_input_length - len(example) + 2], mode = 'constant') for example in train_x]).astype(int)
 
 embedder = embedding.Embed(word_to_index, 512, 16)
-embedder.embedding_words = np.load(trained_model_dir+'/embedding_words.npy')
+embedder.embedding_words = np.load(pkl_dir+'/embedding_words.npy')
 
 # Build the encoder and the decoder networks
 Encoder = conv_encoder.ConvEncoder(len(index_to_word), max_input_length + 2, 128, 512, 1, 1)
@@ -86,6 +88,6 @@ checkpoint = tf.train.Checkpoint(optimizer=optimizer,
 
 checkpoint.restore(tf.train.latest_checkpoint(trained_model_dir))
 
-trainer = training.Translator(Encoder, Decoder, embedder, word_to_index, index_to_word)
+trainer = training.Translator(Encoder, Decoder, embedder, word_to_index, index_to_word, ckpt_dir)
 
 print(trainer(inputs = train_x))
