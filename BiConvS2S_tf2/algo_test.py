@@ -19,19 +19,31 @@ import training
 # examples : Input
 # target : Corresponding Outputs
 ######################################################################
-examples = [
-    "Hi, how are you?",
-    "Can you turn on the fan?",
-    "Can you tell me the weather?"
-]
+# examples = [
+#    "Hi, how are you?",
+#    "Can you turn on the fan?",
+#    "Can you tell me the weather?"
+# ]
 
-target = [
-    "I am fine, thank you",
-    "Turning on the fan on a medium speed",
-    "The weather is 19 and sunny"
-]
+# target = [
+#     "I am fine, thank you",
+#     "Turning on the fan on a medium speed",
+#     "The weather is 19 and sunny"
+# ]
 
-# TODO: load training data from data.en and data.sparql
+
+def load_data(data_path):
+    with open(data_path, 'rb') as f:
+        lines = [line.rstrip().decode("utf-8") for line in f]
+    return lines
+
+data_dir = 'BiConvS2S_tf2/data'
+
+examples = load_data(data_dir+'/data.en')
+target = load_data(data_dir+'/data.sparql')
+
+print(examples[:3])
+print(target[:3])
 
 trained_model_dir = "BiConvS2S_tf2"
 ckpt_dir = os.path.join(trained_model_dir, "ckpt")
@@ -58,7 +70,7 @@ train_y = []
 for sentence in examples:
 
     # Remove the punctuation marks
-    removed_punc = sentence.translate(sentence.maketrans("", "", string.punctuation))
+    removed_punc = sentence.translate(sentence.maketrans("?", " "))
 
     # Convert all the letters to lowercase
     removed_punc = removed_punc.lower()
@@ -94,10 +106,8 @@ for sentence in examples:
 # Follow a similar process for the target corpus
 
 for sentence in target:
-    removed_punc = sentence.translate(sentence.maketrans("", "", string.punctuation))
-    removed_punc = removed_punc.lower()
-    split_sent = list(removed_punc.split())
-    if (len(split_sent)) > max_input_length:
+    split_sent = list(sentence.split())
+    if (len(split_sent)) > max_target_length:
         max_target_length = len(split_sent)
 
     vectorized = []
@@ -113,8 +123,13 @@ for sentence in target:
     train_y.append(vectorized)
 
 # Pad the examples and the labels with zero to ensure equal length
+print("Max input length: ", max_input_length)
+print("Max target length: ", max_target_length)
 train_x = np.asarray([np.pad(example, [0, max_input_length - len(example) + 2], mode = 'constant') for example in train_x]).astype(int)
 train_y = np.asarray([np.pad(example, [0, max_target_length - len(example) + 2], mode = 'constant') for example in train_y]).astype(int)
+
+print(train_x[:3])
+print(train_y[:3])
 
 os.mkdir(pkl_dir)
 with open(pkl_dir+'/word_to_index.pkl', 'wb') as f:

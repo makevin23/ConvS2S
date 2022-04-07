@@ -2,3 +2,4 @@ BiConvS2S/__pycache__/*
 BiConvS2S_tf2/__pycache__/*
 BiConvS2S_tf2/ckpt/*
 BiConvS2S_tf2/pkl/*
+BiConvS2S_tf2/data/*
