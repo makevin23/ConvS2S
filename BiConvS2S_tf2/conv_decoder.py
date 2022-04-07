@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import os
 
 # How does the decoder work?:
 # 1. The decoder takes the decoder inputs (Which are just the targets with the 
