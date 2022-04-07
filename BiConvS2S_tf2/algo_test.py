@@ -31,6 +31,8 @@ target = [
     "The weather is 19 and sunny"
 ]
 
+# TODO: load training data from data.en and data.sparql
+
 trained_model_dir = "BiConvS2S_tf2"
 ckpt_dir = os.path.join(trained_model_dir, "ckpt")
 pkl_dir = trained_model_dir + "/pkl"
