@@ -51,8 +51,8 @@ class ConvDecoder(tf.keras.Model):
         self.dense_layer_2 = tf.keras.layers.Dense(self.embedding_size, activation="relu")
         self.dense_layer_3 = tf.keras.layers.Dense(self.vocab_size, activation="relu")
         # TODO: replace Dense with Conv1D
-        self.layer_conv_embedding = tf.keras.layers.Dense(self.embedding_size, activation="relu")
-        self.layer_embedding_conv = tf.keras.layers.Dense(self.hidden_size, activation="relu")
+        self.layer_conv_embedding = tf.keras.layers.Conv1D(self.hidden_size, self.embedding_size, activation="relu")
+        self.layer_embedding_conv = tf.keras.layers.Conv1D(self.embedding_size, self.hidden_size, activation="relu")
         self.conv_layer = tf.keras.layers.Conv2D(filters=2 * self.hidden_size, kernel_size=self.kernel_size, padding="same")
 
     def for_decoder(self, encoder_outputs, encoder_attention):

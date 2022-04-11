@@ -37,16 +37,9 @@ class ConvEncoder(tf.keras.Model):
         self.dense_layer_2 = tf.keras.layers.Dense(self.embedding_size, activation="relu")
         self.dense_layer_3 = tf.keras.layers.Dense(self.vocab_size, activation="relu")
         # TODO: replace dense layer with convolutional layer
-        self.layer_conv_embedding = tf.keras.layers.Dense(self.embedding_size, activation="relu")
-        self.layer_embedding_conv = tf.keras.layers.Dense(self.hidden_size, activation="relu")
+        self.layer_conv_embedding = tf.keras.layers.Conv1D(self.hidden_size, self.embedding_size, activation="relu")
+        self.layer_embedding_conv = tf.keras.layers.Conv1D(self.embedding_size, self.hidden_size, activation="relu")
         self.conv_layer = tf.keras.layers.Conv2D(filters=2 * self.hidden_size, kernel_size=self.kernel_size, padding="same")
-        
-        # self.dense_layer_1 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Encoder")
-        # self.dense_layer_2 = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Encoder")
-        # self.dense_layer_3 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.vocab_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_3_Encoder")
-        # self.layer_conv_embedding = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Hid_to_Embed_att_dec")
-        # self.layer_embedding_conv = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
-        
 
 
     def for_encoder(self):
