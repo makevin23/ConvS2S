@@ -19,17 +19,46 @@ import training
 # examples : Input
 # target : Corresponding Outputs
 ######################################################################
-# examples = [
-#    "Hi, how are you?",
-#    "Can you turn on the fan?",
-#    "Can you tell me the weather?"
-# ]
-
-# target = [
-#     "I am fine, thank you",
-#     "Turning on the fan on a medium speed",
-#     "The weather is 19 and sunny"
-# ]
+examples = [
+    "<A> has how many relatives?",
+    "<A> has won how many awards?",
+    "<A> is from which city?",
+    "Count the affiliations of <A>?",
+    "Count the different causes of death of <A>.",
+    "Did <A> did his highschool in <B>?",
+    "Did <A> study at the <B> university?",
+    "Did <A> study at the <B>?",
+    "Did <A> study at the <B>?",
+    "Did <A> study in <B>?",
+    "Did <A> study in the <B>?",
+    "Did <B> do his highschool in <A>?",
+    "Did <B> go to <A> studying?",
+    "Did <B> study at the <A>",
+    "Does <B> have a license of <A>?",
+    "Does <B> have the <A>?",
+    "Does <B> study <A>?",
+    "Does <B> study <A>?",
+]
+target = [
+    "SELECT DISTINCT COUNT attr_open var_uri attr_close where  brack_open  <A> dbo_relative var_uri  brack_close",
+    "SELECT DISTINCT COUNT attr_open var_uri attr_close where  brack_open  <A> dbo_award var_uri  brack_close ",
+    "SELECT DISTINCT var_uri where  brack_open  <A> dbo_hometown var_uri  brack_close ",
+    "SELECT DISTINCT COUNT attr_open var_uri attr_close where  brack_open  <A> dbp_affiliation var_uri  brack_close ",
+    "SELECT DISTINCT COUNT attr_open var_uri attr_close where  brack_open  var_x dbo_religion <A> sep_dot var_x dbo_deathCause var_uri  brack_close",
+    "ASK where  brack_open  <A> dbp_highSchool <B>  brack_close",
+    "ASK where  brack_open  <A> dbp_university <B>  brack_close",
+    "ASK where  brack_open  <A> dbo_institution <B>  brack_close",
+    "ASK where  brack_open  <A> dbo_university <B>  brack_close",
+    "ASK where  brack_open  <A> dbp_highSchool <B>  brack_close",
+    "ASK where  brack_open  <A> dbo_institution <B>  brack_close",
+    "ASK where  brack_open  <B> dbp_highSchool <A>  brack_close",
+    "ASK where  brack_open  <B> dbo_university <A>  brack_close",
+    "ASK where  brack_open  <B> dbo_institution <A>  brack_close",
+    "ASK where  brack_open  <B> dbp_license <A>  brack_close",
+    "ASK where  brack_open  <B> dbp_license <A>  brack_close",
+    "ASK where  brack_open  <B> dbo_field <A>  brack_close",
+    "ASK where  brack_open  <B> dbp_mainInterests <A>  brack_close", 
+]
 
 
 def load_data(data_path):
@@ -39,8 +68,8 @@ def load_data(data_path):
 
 data_dir = 'BiConvS2S_tf2/data'
 
-examples = load_data(data_dir+'/data.en')
-target = load_data(data_dir+'/data.sparql')
+# examples = load_data(data_dir+'/data.en')
+# target = load_data(data_dir+'/data.sparql')
 
 print(examples[:3])
 print(target[:3])
