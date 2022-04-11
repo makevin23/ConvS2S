@@ -51,20 +51,20 @@ class Translator():
         self.decoder.input_x_rev = input_x_rev
         self.target_pl_rev = target_rev
 
-    # @tf.function
     def train_step_for(self):
         with tf.GradientTape() as tape:
             encoder_output, encoder_attention = self.encoder.for_encoder()
             prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
             loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
-            # TODO: add var_list in minimize call, all layers in encoder?
-            # coder_layers = [self.encoder.dense_layer_1, self.encoder.dense_layer_2, self.encoder.dense_layer_3, self.encoder.layer_conv_embedding, self.encoder.layer_embedding_conv, self.encoder.conv_layer, 
-            #                 self.decoder.dense_layer_1, self.decoder.dense_layer_2, self.decoder.dense_layer_3, self.decoder.layer_conv_embedding, self.decoder.layer_embedding_conv, self.decoder.conv_layer]
+            print(self.encoder.trainable_weights)
+            # print(self.decoder.trainable_weights)
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
+            # TODO: fix gradients for dense_layer_3, conv_embedding, embedding_conv
             gradients = tape.gradient(loss_fxn_for, variables)
-            # print(variables)
-            # print(gradients)
-            self.optimizer.apply_gradients(zip(gradients, variables))
+            # print("variables: ", variables)
+            # print("gradients: ", gradients)
+            # self.optimizer.apply_gradients(zip(gradients, variables))
+            self.optimizer.apply_gradients((gradients, variables) for (gradients, variables) in zip(gradients, variables) if gradients is not None)
             # optimizer.minimize(loss_fxn_for, var_list=coder_layers, tape=tape)
         return loss_fxn_for
 
