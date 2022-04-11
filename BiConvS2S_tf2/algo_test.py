@@ -6,9 +6,7 @@
 
 import os
 import pickle
-import tensorflow as tf
 import numpy as np
-import string
 import embedding
 import conv_encoder
 import conv_decoder
@@ -19,17 +17,47 @@ import training
 # examples : Input
 # target : Corresponding Outputs
 ######################################################################
-# examples = [
-#    "Hi, how are you?",
-#    "Can you turn on the fan?",
-#    "Can you tell me the weather?"
-# ]
+examples = [
+    "<A> has how many relatives?",
+    "<A> has won how many awards?",
+    "<A> is from which city?",
+    "Count the affiliations of <A>?",
+    "Count the different causes of death of <A>.",
+    "Did <A> did his highschool in <B>?",
+    "Did <A> study at the <B> university?",
+    "Did <A> study at the <B>?",
+    "Did <A> study at the <B>?",
+    "Did <A> study in <B>?",
+    "Did <A> study in the <B>?",
+    "Did <B> do his highschool in <A>?",
+    "Did <B> go to <A> studying?",
+    "Did <B> study at the <A>",
+    "Does <B> have a license of <A>?",
+    "Does <B> have the <A>?",
+    "Does <B> study <A>?",
+    "Does <B> study <A>?",
+]
 
-# target = [
-#     "I am fine, thank you",
-#     "Turning on the fan on a medium speed",
-#     "The weather is 19 and sunny"
-# ]
+target = [
+    "SELECT DISTINCT COUNT attr_open var_uri attr_close where  brack_open  <A> dbo_relative var_uri  brack_close",
+    "SELECT DISTINCT COUNT attr_open var_uri attr_close where  brack_open  <A> dbo_award var_uri  brack_close",
+    "SELECT DISTINCT var_uri where  brack_open  <A> dbo_hometown var_uri  brack_close",
+    "SELECT DISTINCT COUNT attr_open var_uri attr_close where  brack_open  <A> dbp_affiliation var_uri  brack_close",
+    "SELECT DISTINCT COUNT attr_open var_uri attr_close where  brack_open  var_x dbo_religion <A> sep_dot var_x dbo_deathCause var_uri  brack_close",
+    "ASK where  brack_open  <A> dbp_highSchool <B>  brack_close", 
+    "ASK where  brack_open  <A> dbp_university <B>  brack_close", 
+    "ASK where  brack_open  <A> dbo_institution <B>  brack_close", 
+    "ASK where  brack_open  <A> dbo_university <B>  brack_close", 
+    "ASK where  brack_open  <A> dbp_highSchool <B>  brack_close", 
+    "ASK where  brack_open  <A> dbo_institution <B>  brack_close", 
+    "ASK where  brack_open  <B> dbp_highSchool <A>  brack_close", 
+    "ASK where  brack_open  <B> dbo_university <A>  brack_close", 
+    "ASK where  brack_open  <B> dbo_institution <A>  brack_close", 
+    "ASK where  brack_open  <B> dbp_license <A>  brack_close", 
+    "ASK where  brack_open  <B> dbp_license <A>  brack_close", 
+    "ASK where  brack_open  <B> dbo_field <A>  brack_close", 
+    "ASK where  brack_open  <B> dbp_mainInterests <A>  brack_close", 
+]
 
 
 def load_data(data_path):
@@ -39,11 +67,11 @@ def load_data(data_path):
 
 data_dir = 'BiConvS2S_tf2/data'
 
-examples = load_data(data_dir+'/data.en')
-target = load_data(data_dir+'/data.sparql')
+# examples = load_data(data_dir+'/data.en')
+# target = load_data(data_dir+'/data.sparql')
 
-print(examples[:3])
-print(target[:3])
+# print(examples[:3])
+# print(target[:3])
 
 trained_model_dir = "BiConvS2S_tf2"
 ckpt_dir = os.path.join(trained_model_dir, "ckpt")
@@ -51,7 +79,7 @@ pkl_dir = trained_model_dir + "/pkl"
 
 #######################################################################
 # Define the properties of the example corpus and generate the 
-# vocabulary.
+# vocabulary.examples = load_data(data_dir+'/data.en')
 # train_x = Input training num vectors built using the generated 
 #           vocabulary
 # train_y = Input training label num vectors built using the 
@@ -123,13 +151,8 @@ for sentence in target:
     train_y.append(vectorized)
 
 # Pad the examples and the labels with zero to ensure equal length
-print("Max input length: ", max_input_length)
-print("Max target length: ", max_target_length)
 train_x = np.asarray([np.pad(example, [0, max_input_length - len(example) + 2], mode = 'constant') for example in train_x]).astype(int)
 train_y = np.asarray([np.pad(example, [0, max_target_length - len(example) + 2], mode = 'constant') for example in train_y]).astype(int)
-
-print(train_x[:3])
-print(train_y[:3])
 
 os.mkdir(pkl_dir)
 with open(pkl_dir+'/word_to_index.pkl', 'wb') as f:
@@ -159,3 +182,4 @@ Decoder = conv_decoder.ConvDecoder(len(index_to_word), max_target_length + 2, 12
 trainer = training.Translator(Encoder, Decoder, embedder, word_to_index, index_to_word, ckpt_dir)
 trainer(inputs = train_x, targets = train_y, is_training = True)
 
+print(trainer(inputs=train_x))
