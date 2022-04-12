@@ -39,13 +39,10 @@ class ConvEncoder(tf.keras.Model):
         self.layer_conv_embedding = tf.keras.layers.Dense(self.embedding_size, activation=tf.keras.activations.softmax, name="encoder_conv_embedding")
         self.layer_embedding_conv = tf.keras.layers.Dense(self.hidden_size, activation=tf.keras.activations.softmax, name="encoder_embedding_conv")
         self.conv_layer = tf.keras.layers.Conv2D(filters=2 * self.hidden_size, kernel_size=self.kernel_size, padding="same", name="encoder_conv_layer")
-        
-        # self.dense_layer_1 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_1_Encoder")
-        # self.dense_layer_2 = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_2_Encoder")
-        # self.dense_layer_3 = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.vocab_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Layer_3_Encoder")
-        # self.layer_conv_embedding = tf.Variable(tf.random.truncated_normal([self.hidden_size, self.embedding_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Hid_to_Embed_att_dec")
-        # self.layer_embedding_conv = tf.Variable(tf.random.truncated_normal([self.embedding_size, self.hidden_size], mean = 0, stddev = 1/np.sqrt(self.embedding_size)), name = "Embed_to_Hid_att_dec")
-        
+
+        self.trainable_variables.append(self.dense_layer_3)
+        self.trainable_variables.append(self.layer_conv_embedding)
+        self.trainable_variables.append(self.layer_embedding_conv)
 
 
     def for_encoder(self):
