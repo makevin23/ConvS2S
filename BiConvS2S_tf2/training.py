@@ -13,18 +13,14 @@ class Translator():
         self.vocab_size = len(vocab)
         self.vocab = vocab
         self.inverse_vocab = inverse_vocab
-        self.loss = tf.compat.v1.nn.softmax_cross_entropy_with_logits_v2
+        self.loss = tf.nn.softmax_cross_entropy_with_logits
         self.batch_size = batch_size
         self.epochs = epochs
         self.lr = learning_rate
         self.optimizer = tf.keras.optimizers.Adam(learning_rate = self.lr)
         self.ckpt_dir = ckpt_dir
         
-        # self.target_pl = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.decoder.max_length - 1, self.vocab_size], name = "Forward_targets")
-        # self.target_pl_rev = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.encoder.max_length - 1, self.vocab_size], name = "Reverse_targets")
-
 # The __call__() enables use to build a callable object.
-   
     def __call__(self, inputs, targets = None, is_training = False):
 
         # Check if the model is trained or not
@@ -56,15 +52,12 @@ class Translator():
             encoder_output, encoder_attention = self.encoder.for_encoder()
             prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
             loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
-            print(self.encoder.trainable_weights)
-            # print(self.decoder.trainable_weights)
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             # TODO: fix gradients for dense_layer_3, conv_embedding, embedding_conv
             gradients = tape.gradient(loss_fxn_for, variables)
-            # print("variables: ", variables)
-            # print("gradients: ", gradients)
-            # self.optimizer.apply_gradients(zip(gradients, variables))
             self.optimizer.apply_gradients((gradients, variables) for (gradients, variables) in zip(gradients, variables) if gradients is not None)
+            # self.optimizer.apply_gradients((gradients, self.encoder.trainable_variables) for (gradients, self.encoder.trainable_variables) in zip(gradients, self.encoder.trainable_variables) if gradients is not None)
+            # self.optimizer.apply_gradients((gradients, self.decoder.trainable_variables) for (gradients, self.decoder.trainable_variables) in zip(gradients, self.decoder.trainable_variables) if gradients is not None)
             # optimizer.minimize(loss_fxn_for, var_list=coder_layers, tape=tape)
         return loss_fxn_for
 
@@ -74,7 +67,6 @@ class Translator():
             decoder_output, decoder_attention = self.decoder.rev_decoder()
             prob_output_rev = self.encoder.rev_encoder(decoder_output, decoder_attention)
             loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
-            # TODO: add var_list in minimize call, all layers in decoder?
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss_fxn_rev, variables)
             self.optimizer.apply_gradients(zip(gradients, variables))
@@ -121,11 +113,6 @@ class Translator():
                 self.init_train_step(input_x, decoder_input, target, encoder_input_rev, input_x_rev, target_rev)
                 loss_val_for = self.train_step_for()
                 loss_val_rev = self.train_step_rev()
-
-            
-                # Run the summary merger op and add the summary to the tensorboard tfevents file
-                # summ = sess.run(merger, feed_dict = { self.encoder.X : input_x, self.decoder.input_x : decoder_input, self.target_pl : target, self.encoder.X_rev : encoder_input_rev, self.decoder.input_x_rev : input_x_rev, self.target_pl_rev : target_rev})
-                # writer.add_summary(summ, n_batches*i + sum(batch))
                 loss_epoch.append([loss_val_for, loss_val_rev])
             loss.append(np.mean(loss_epoch, axis = 0))
 
@@ -134,8 +121,7 @@ class Translator():
             print("LOSS : " + str(loss[i]))
         checkpoint = tf.train.Checkpoint(optimizer=self.optimizer, encoder=self.encoder,decoder=self.decoder)
         # save the model
-        checkpoint.save(file_prefix=os.path.join(self.ckpt_dir, "ckpt"))
-        # tf.keras.models.save_model(self.decoder, "decoder_model.h5", save_format = "h5")
+        # checkpoint.save(file_prefix=os.path.join(self.ckpt_dir, "ckpt"))
         print("Model saved !")
         # Create a folder to store the weights of the model
         print("Finished Optimization")
