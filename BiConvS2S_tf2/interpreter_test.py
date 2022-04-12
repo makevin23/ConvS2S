@@ -9,9 +9,7 @@ import conv_decoder
 import training
 
 examples = [
-    "Hi, how are you?",
-    "Can you turn on the fan?",
-    "Can you tell me the weather?"
+    "Did <A> study at the <B> university?"
 ]
 
 target = [
