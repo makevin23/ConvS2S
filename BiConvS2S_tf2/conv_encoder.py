@@ -40,10 +40,6 @@ class ConvEncoder(tf.keras.Model):
         self.layer_embedding_conv = tf.keras.layers.Dense(self.hidden_size, activation=tf.keras.activations.softmax, name="encoder_embedding_conv")
         self.conv_layer = tf.keras.layers.Conv2D(filters=2 * self.hidden_size, kernel_size=self.kernel_size, padding="same", name="encoder_conv_layer")
 
-        self.trainable_variables.append(self.dense_layer_3)
-        self.trainable_variables.append(self.layer_conv_embedding)
-        self.trainable_variables.append(self.layer_embedding_conv)
-
 
     def for_encoder(self):
         # self.X = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length, self.embedding_size], name = "Encoder_Input")

@@ -53,7 +53,6 @@ class Translator():
             prob_output = self.decoder.for_decoder(encoder_output, encoder_attention)
             loss_fxn_for = tf.reduce_mean(self.loss(labels = self.target_pl, logits = prob_output))
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
-            # TODO: fix gradients for dense_layer_3, conv_embedding, embedding_conv
             gradients = tape.gradient(loss_fxn_for, variables)
             self.optimizer.apply_gradients((gradients, variables) for (gradients, variables) in zip(gradients, variables) if gradients is not None)
             # self.optimizer.apply_gradients((gradients, self.encoder.trainable_variables) for (gradients, self.encoder.trainable_variables) in zip(gradients, self.encoder.trainable_variables) if gradients is not None)
