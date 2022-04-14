@@ -99,14 +99,9 @@ class ConvDecoder(tf.keras.Model):
         self.prob_output = self.dense_layer_3(output)
         self.prob_output = tf.reshape(self.prob_output, [tf.shape(self.prob_output)[0]/(self.max_length - 1), self.max_length - 1, self.vocab_size])
         self.prob_output = tf.nn.softmax(self.prob_output, 2)
-        # writer = tf.compat.v1.summary.FileWriter(os.getcwd() + '/TensorBoard_' + str(np.random.randint(0, 10000)))
-        # with tf.compat.v1.Session() as sess:
-        #     sess.run(tf.compat.v1.global_variables_initializer())
-        #     writer.add_graph(sess.graph)
         return (self.prob_output)
     
     def rev_decoder(self):
-        # self.input_x_rev = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, self.max_length, self.embedding_size], name = "Decoding_Input_rev")
         self.input_x_rev = self.dropout_layer(self.input_x_rev, training=True)
         temp = tf.reshape(self.input_x_rev, [tf.shape(self.input_x_rev)[0]*self.input_x_rev.shape[1], self.input_x_rev.shape[2]])
         dl1_out_ = self.dense_layer_1(temp)

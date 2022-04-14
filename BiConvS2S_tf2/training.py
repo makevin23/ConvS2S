@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import os
 
 
 # The Translator class trains the network translating between languages
@@ -55,12 +54,8 @@ class Translator():
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss_fxn_for, variables)
             self.optimizer.apply_gradients((gradients, variables) for (gradients, variables) in zip(gradients, variables) if gradients is not None)
-            # self.optimizer.apply_gradients((gradients, self.encoder.trainable_variables) for (gradients, self.encoder.trainable_variables) in zip(gradients, self.encoder.trainable_variables) if gradients is not None)
-            # self.optimizer.apply_gradients((gradients, self.decoder.trainable_variables) for (gradients, self.decoder.trainable_variables) in zip(gradients, self.decoder.trainable_variables) if gradients is not None)
-            # optimizer.minimize(loss_fxn_for, var_list=coder_layers, tape=tape)
         return loss_fxn_for
 
-    # @tf.function
     def train_step_rev(self):
         with tf.GradientTape() as tape:
             decoder_output, decoder_attention = self.decoder.rev_decoder()

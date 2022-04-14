@@ -150,13 +150,9 @@ for sentence in target:
     train_y.append(vectorized)
 
 # Pad the examples and the labels with zero to ensure equal length
-# print("Max input length: ", max_input_length)
-# print("Max target length: ", max_target_length)
 train_x = np.asarray([np.pad(example, [0, max_input_length - len(example) + 2], mode = 'constant') for example in train_x]).astype(int)
 train_y = np.asarray([np.pad(example, [0, max_target_length - len(example) + 2], mode = 'constant') for example in train_y]).astype(int)
 
-# print(train_x[:3])
-# print(train_y[:3])
 
 # store the vocabulary
 # os.mkdir(pkl_dir)
