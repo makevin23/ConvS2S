@@ -1,4 +1,3 @@
-import os
 import pickle
 import tensorflow as tf
 import numpy as np
@@ -66,8 +65,6 @@ for sentence in examples:
             vectorized.append(word_to_index['<unk>'])
     vectorized.append(1)
     train_x.append(vectorized)
-
-# Follow a similar process for the target corpus
 
 # Pad the examples and the labels with zero to ensure equal length
 train_x = np.asarray([np.pad(example, [0, max_input_length - len(example) + 2], mode = 'constant') for example in train_x]).astype(int)
