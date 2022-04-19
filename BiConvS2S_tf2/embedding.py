@@ -3,6 +3,7 @@ import tensorflow as tf
 import tensorflow.python.ops.numpy_ops.np_config as np_config
 
 
+
 class Embed():
     def __init__(self, vocab: dict, embedding_size: int, batch_size: int) -> None:
         self.vocab = vocab
