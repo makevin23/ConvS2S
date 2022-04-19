@@ -2,7 +2,10 @@ BiConvS2S/__pycache__/*
 <<<<<<< HEAD
 BiConvS2S_tf2/__pycache__/*
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> use numpy array instead of tf variable
 =======
 >>>>>>> Revert "Merge branch 'tf2'"
+=======
+>>>>>>> 898d2af30bead4e1ea1f4620d26992a0e3a5eb7a
