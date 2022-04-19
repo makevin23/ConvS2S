@@ -44,7 +44,6 @@ class Embed():
         X_ = []
         Y_ = []
         for sentence in X:
-
             # For each sentence in the training set
             for i in range(sentence.size):
 
@@ -70,7 +69,11 @@ class Embed():
         self.generate_input_pairs(X)
 
         # Initialize all the variables and placeholders
-        self.embedding_words = tf.Variable(tf.random.uniform([self.vocab_size, self.embedding_size], -1, 1), name = "Embedder")
+        # embedding_words is a symbolic Tensor, so the value cannot be read. see:
+        # https://stackoverflow.com/questions/59707065/what-are-symbolic-tensors-in-tensorflow-and-keras
+        # self.embedding_words = tf.random.uniform([self.vocab_size, self.embedding_size], -1, 1)
+        self.embedding_words = np.random.uniform(-1, 1, [self.vocab_size, self.embedding_size])
+
         nce_weights = tf.Variable(tf.compat.v1.random.truncated_normal([self.vocab_size, self.embedding_size], stddev = 1/np.sqrt(self.embedding_size)), name = "Embedding_Layer")
         nce_biases = tf.Variable(tf.zeros([self.vocab_size]), name = "Embedding_Biases")
         n_batches = len(self.X) // self.batch_size
@@ -109,6 +112,11 @@ class Embed():
                     feed_dict = {train_inputs : self.X[batch], train_labels : self.Y[batch]}
                     _, cur_loss = sess.run([optimizer, loss], feed_dict = feed_dict)
 
+
+    @tf.function
+    def lookup_in_embedding(self, word_ids):
+        return tf.nn.embedding_lookup(self.embedding_words, word_ids, name="Look_Up_Function")
+
     # Use the trained embedding function to 
     # generate the embeddings of the input sentences
     def get_embedding(self, X):
@@ -123,6 +131,8 @@ class Embed():
                     vecc.append(sess.run(look_up, feed_dict = { word_tf : word}))
                 embedded_words.append(np.asarray(vecc))
         return(np.asarray(embedded_words))
+
+    
     
     # Generate the position embeddings of the input sentences
     def get_position_embedding(self, X):
@@ -170,6 +180,12 @@ class Embed():
                 one_hot[i, j, X[i, j]] = 1
         return one_hot
 
+    def export_embedder(self, file_path):
+        with open(file_path+"/embedding_words.npy", "wb") as f:
+            np.save(f, self.embedding_words)
 
+    def load_embedding_words(self, embedding_words_file):
+        with open(embedding_words_file+"/embedding_words.npy", "rb") as f:
+            self.embedding_words = np.load(f)
 
 

@@ -20,21 +20,10 @@ class Embed():
             position_vectors.append(np.asarray(current_vector))
         self.position_vectors = np.asarray(position_vectors)
 
-    def generate_input_pairs(self, X):
-        np_config.enable_numpy_behavior()
-        X_ = []
-        Y_ = []
-        for sentence in X:
-            for i in range(sentence.size):
-                if(i+1 != len(sentence)):
-                    X_.append(sentence[i])
-                    Y_.append(sentence[i+1])
-                if(i-1 != -1):
-                    X_.append(sentence[i])
-                    Y_.append(sentence[i-1])
-        self.X = np.asarray(X_)
-        self.Y = np.asarray(Y_)
-        self.Y = np.expand_dims(self.Y, 1)
+    def generate_input_pairs(self, training_sentences):
+       
+        words = []
+        previous_and_following_words = []
 
     
 

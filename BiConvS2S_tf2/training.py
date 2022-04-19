@@ -1,11 +1,12 @@
 import tensorflow as tf
 import numpy as np
+import os
 
 
 # The Translator class trains the network translating between languages
 
 class Translator():
-    def __init__(self, encoder, decoder, embedder, vocab, inverse_vocab, ckpt_dir, learning_rate = 0.0001, batch_size = 1, epochs = 3):
+    def __init__(self, encoder, decoder, embedder, vocab, inverse_vocab, ckpt_dir, learning_rate = 0.001, batch_size = 16, epochs = 100):
         self.encoder = encoder
         self.decoder = decoder
         self.embedder = embedder
@@ -116,7 +117,7 @@ class Translator():
             print("LOSS : " + str(loss[i]))
         checkpoint = tf.train.Checkpoint(optimizer=self.optimizer, encoder=self.encoder,decoder=self.decoder)
         # save the model
-        # checkpoint.save(file_prefix=os.path.join(self.ckpt_dir, "ckpt"))
+        checkpoint.save(file_prefix=os.path.join(self.ckpt_dir, "ckpt"))
         print("Model saved !")
         # Create a folder to store the weights of the model
         print("Finished Optimization")
