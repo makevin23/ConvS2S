@@ -117,7 +117,7 @@ class Translator():
             print("LOSS : " + str(loss[i]))
         checkpoint = tf.train.Checkpoint(optimizer=self.optimizer, encoder=self.encoder,decoder=self.decoder)
         # save the model
-        # checkpoint.save(file_prefix=os.path.join(self.ckpt_dir, "ckpt"))
+        checkpoint.save(file_prefix=os.path.join(self.ckpt_dir, "ckpt"))
         print("Model saved !")
         # Create a folder to store the weights of the model
         print("Finished Optimization")
