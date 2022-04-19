@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-
+import os
 
 
 # The Translator class trains the network translating between languages
