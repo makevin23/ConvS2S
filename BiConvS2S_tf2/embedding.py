@@ -1,4 +1,3 @@
-from operator import index
 import numpy as np
 import tensorflow as tf
 import tensorflow.python.ops.numpy_ops.np_config as np_config
