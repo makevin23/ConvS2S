@@ -5,7 +5,7 @@ import numpy as np
 # The Translator class trains the network translating between languages
 
 class Translator():
-    def __init__(self, encoder, decoder, embedder, vocab, inverse_vocab, ckpt_dir, learning_rate = 0.0001, batch_size = 16, epochs = 50):
+    def __init__(self, encoder, decoder, embedder, vocab, inverse_vocab, ckpt_dir, learning_rate = 0.0001, batch_size = 16, epochs = 100):
         self.encoder = encoder
         self.decoder = decoder
         self.embedder = embedder
