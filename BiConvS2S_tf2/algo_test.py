@@ -178,8 +178,8 @@ embedder.train_embedder(train_x)
 np.save(pkl_dir+'/embedding_words.npy', embedder.embedding_words)
 
 # Build the encoder and the decoder networks
-Encoder = conv_encoder.ConvEncoder(len(index_to_word), max_input_length + 2, 128, 512, 1, 1)
-Decoder = conv_decoder.ConvDecoder(len(index_to_word), max_target_length + 2, 128, 512, 1, 1)
+Encoder = conv_encoder.ConvEncoder(len(index_to_word), max_input_length + 2, 128, 512, 8, 1)
+Decoder = conv_decoder.ConvDecoder(len(index_to_word), max_target_length + 2, 128, 512, 8, 1)
 
 # Pass them to the trainer and train the CNN
 trainer = training.Translator(Encoder, Decoder, embedder, word_to_index, index_to_word, ckpt_dir)
