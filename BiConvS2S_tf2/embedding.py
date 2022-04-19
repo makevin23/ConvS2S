@@ -24,28 +24,8 @@ class Embed():
         words = []
         previous_and_following_words = []
 
-    
-
     @tf.function
-    def train_step(self, nce_weights, nce_biases, train_inputs, train_labels):
-        embed = tf.nn.embedding_lookup(self.embedding_words, train_inputs)
-
-        loss = tf.reduce_mean(
-            tf.nn.nce_loss(
-                weights = nce_weights,
-                biases = nce_biases,
-                labels = train_labels,
-                inputs = embed,
-                num_sampled = 8,
-                num_classes = self.vocab_size
-            )
-        )
-        optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate = 0.1)
-
-        optimizer.minimize(loss, var_list=self.embedding_words)
-
-
-    def train_embedder(self, X):
+    def optimize_loss(self,X):
         self.generate_input_pairs(X)
 
         self.embedding_words = tf.Variable(tf.random.uniform(
@@ -55,9 +35,32 @@ class Embed():
             [self.vocab_size, self.embedding_size], stddev=1/np.sqrt(self.embedding_size)), name="Embedding_Layer")
         nce_biases = tf.Variable(
             tf.zeros([self.vocab_size]), name="Embedding_Biases")
+        train_inputs = tf.keras.Input(
+            dtype=tf.int32, shape=[self.batch_size], name="Dictionary_Input")
+        train_labels = tf.keras.Input(
+            dtype=tf.int32, shape=[self.batch_size], name="Embedded_Output")
+
+        embed = tf.nn.embedding_lookup(self.embedding_words, train_inputs)
+
+        loss = tf.reduce_mean(
+            tf.nn.nce_loss(
+                weights=nce_weights,
+                biases=nce_biases,
+                labels=train_labels,
+                inputs=embed,
+                num_sampled=8,
+                num_classes=self.vocab_size
+            )
+        )
+        optimizer = tf.keras.optimizers.SGD(learning_rate=0.1).minimize(loss, var_list = [train_inputs, train_labels])
+
+
+
+    def train_embedder(self, X):
         n_batches = len(self.X) // self.batch_size
 
         # training part
+        # 100 epochs
         for _i in range(100):
             index_ = np.arange(0, self.X.shape[0])
             np.random.shuffle(index_)
@@ -65,9 +68,7 @@ class Embed():
             for i in range(n_batches):
                     index.append(index_[(self.batch_size*i):(self.batch_size*(i + 1))])
             for batch in index:
-                train_inputs = self.X[batch]
-                train_labels = self.Y[batch]
-                self.train_step(nce_weights, nce_biases, train_inputs, train_labels)
+                self.optimize_loss(X)
                 
 
     @tf.function
