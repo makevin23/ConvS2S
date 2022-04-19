@@ -63,7 +63,9 @@ class Translator():
             loss_fxn_rev = tf.reduce_mean(self.loss(labels = self.target_pl_rev, logits = prob_output_rev))
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss_fxn_rev, variables)
-            self.optimizer.apply_gradients(zip(gradients, variables))
+            # self.optimizer.apply_gradients(zip(gradients, variables))
+            self.optimizer.apply_gradients((gradients, variables) for (gradients, variables) in zip(gradients, variables) if gradients is not None)
+
         return loss_fxn_rev
 
 # Training the model:
