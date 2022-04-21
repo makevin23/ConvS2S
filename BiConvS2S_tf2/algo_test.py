@@ -168,6 +168,8 @@ with open(pkl_dir+'/max_input_length.pkl', 'wb') as f:
 with open(pkl_dir+'/max_target_length.pkl', 'wb') as f:
     pickle.dump(max_target_length, f)
 
+print('vocabulary are stored in', pkl_dir)
+
 # Train the Embedder Network on the examples
 embedder = embedding.Embed(word_to_index, 512, 16)
 embedder.train_embedder(train_x)
@@ -176,6 +178,7 @@ embedder.train_embedder(train_x)
 
 # store the embedder
 np.save(pkl_dir+'/embedding_words.npy', embedder.embedding_words)
+print('embedding are stored in', pkl_dir)
 
 # Build the encoder and the decoder networks
 Encoder = conv_encoder.ConvEncoder(len(index_to_word), max_input_length + 2, 128, 512, 8, 1)
