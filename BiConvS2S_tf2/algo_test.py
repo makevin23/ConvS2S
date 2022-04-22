@@ -64,7 +64,7 @@ def load_data(data_path):
         lines = [line.rstrip().decode("utf-8") for line in f]
     return lines
 
-data_dir = 'BiConvS2S_tf2/data'
+data_dir = 'data'
 
 examples = load_data(data_dir+'/data.en')
 target = load_data(data_dir+'/data.sparql')

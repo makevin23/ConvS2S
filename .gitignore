@@ -6,5 +6,4 @@ BiConvS2S_tf2/data/*
 .idea/*
 BiConvS2S_tf2/algo_test.py
 .DS_Store
-BiConvS2S/algo_test.py
-BiConvS2S/data/*
+data/*
