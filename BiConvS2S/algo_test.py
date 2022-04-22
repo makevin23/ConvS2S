@@ -18,17 +18,27 @@ import training
 # examples : Input
 # target : Corresponding Outputs
 ######################################################################
-examples = [
-    "Hi, how are you?",
-    "Can you turn on the fan?",
-    "Can you tell me the weather?"
-]
+# examples = [
+#     "Hi, how are you?",
+#     "Can you turn on the fan?",
+#     "Can you tell me the weather?"
+# ]
 
-target = [
-    "I am fine, thank you",
-    "Turning on the fan on a medium speed",
-    "The weather is 19 and sunny"
-]
+# target = [
+#     "I am fine, thank you",
+#     "Turning on the fan on a medium speed",
+#     "The weather is 19 and sunny"
+# ]
+
+def load_data(data_path):
+    with open(data_path, 'rb') as f:
+        lines = [line.rstrip().decode("utf-8") for line in f]
+    return lines
+
+data_dir = 'BiConvS2S/data'
+
+examples = load_data(data_dir+'/data.en')
+target = load_data(data_dir+'/data.sparql')
 
 #######################################################################
 # Define the properties of the example corpus and generate the 
@@ -125,7 +135,7 @@ trainer = training.Translator(Encoder, Decoder, embedder, word_to_index, index_t
 trainer(inputs = train_x, targets = train_y, is_training = True)
 
 # Check the output
-print(trainer(inputs = train_x))
+print(trainer(inputs = ["Does B study A?"]))
 
 
 
